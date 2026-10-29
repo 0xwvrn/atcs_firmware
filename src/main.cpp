@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "TrafficController.hpp"
+#include "TelemetryParser.hpp"
 
 // Physical GPIO Pin Definitions for Traffic Signal LEDs
 // North-South Axis
@@ -83,44 +84,15 @@ void updatePhysicalSignals(SignalState state) {
   digitalWrite(PIN_EW_GREEN, ew_g ? HIGH : LOW);
 }
 
-// Parses validated telemetry packets from Vision Edge Node:
-// {"seq": 1, "approach": "N", "valid": true, "Q": 3, "D_tail_m": 18.4, "PCU": 4.5, "timestamp_ms": 1730234567}
+// Parses and strictly validates telemetry packets using TelemetryParser
 void parseTelemetryPacket(const String &json) {
-  int idx_app = json.indexOf("\"approach\":");
-  int idx_q   = json.indexOf("\"Q\":");
-  int idx_d   = json.indexOf("\"D_tail_m\":");
-  int idx_pcu = json.indexOf("\"PCU\":");
-
-  if (idx_app == -1 || idx_q == -1) return;
-
-  // Extract approach char ('N', 'S', 'E', 'W')
-  int quote1 = json.indexOf("\"", idx_app + 11);
-  char leg = 'N';
-  if (quote1 != -1 && quote1 + 1 < (int)json.length()) {
-    leg = json.charAt(quote1 + 1);
+  ParsedTelemetry pkt;
+  if (!TelemetryParser::parse(json.c_str(), json.length(), pkt)) {
+    Serial.println("[TELEMETRY RX REJECTED] Malformed, incomplete, or corrupted packet discarded.");
+    return;
   }
 
-  int q = json.substring(idx_q + 4).toInt();
-
-  float d_tail = 0.0f;
-  if (idx_d != -1) {
-    d_tail = json.substring(idx_d + 11).toFloat();
-  }
-
-  float pcu = (float)q;
-  if (idx_pcu != -1) {
-    pcu = json.substring(idx_pcu + 6).toFloat();
-  }
-
-  // Parse validity and calibration gating
-  bool is_valid = true;
-  int idx_val = json.indexOf("\"valid\":");
-  if (idx_val != -1) {
-    String val_str = json.substring(idx_val + 8, idx_val + 13);
-    is_valid = val_str.startsWith("true");
-  }
-
-  controller.updateApproach(leg, q, d_tail, pcu, is_valid);
+  controller.updateApproach(pkt.approach, pkt.q_count, pkt.d_tail_m, pkt.p_pcu, pkt.is_valid);
   last_queue_rx_ms = millis();
 }
 

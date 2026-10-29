@@ -2,7 +2,9 @@
 #include <cassert>
 #include <cmath>
 #include <vector>
+#include <cstring>
 #include "../include/TrafficController.hpp"
+#include "../include/TelemetryParser.hpp"
 
 // Native C++ Academic Verification Test Harness for TrafficController
 
@@ -249,9 +251,117 @@ void testCompleteSensorBlackoutFixedFallback() {
   std::cout << "  [PASS] Symmetrical fixed-time 25.0s green allocated to EW corridor." << std::endl;
 }
 
+void testPartialObservationFallbackDemand() {
+  std::cout << "\n--- C++ Test 7: Partial Observation Fallback Demand Justification & Bounding ---" << std::endl;
+  TrafficController ctrl;
+
+  // North is freshly measured at 0.0 PCU. South is STALE (> 5000ms).
+  // South receives fallback PCU (2.0 PCU). Combined NS phase demand = 2.0 PCU.
+  ctrl.setMockTimeMs(0);
+  ctrl.updateApproach('N', 0, 0.0f, 0.0f, true);
+  // South approach never updated -> stale
+  ctrl.tick();
+
+  // Mode must be MODE_DEGRADED_PARTIAL
+  assert(ctrl.getOperatingMode() == MODE_DEGRADED_PARTIAL);
+  std::cout << "  [PASS] Single stale leg places controller into MODE_DEGRADED_PARTIAL." << std::endl;
+
+  // Advance past 2.0s startup hold to enter NS Green
+  ctrl.setMockTimeMs(2100);
+  ctrl.tick();
+  assert(ctrl.getState() == STATE_NS_GREEN);
+  // Dynamic formula: green = 3.5 + (2.0 / 1.0) = 5.5s.
+  // Must clamp to kMinGreen (10.0s), strictly preventing runaway green extension on assumed traffic!
+  assert(ctrl.getAllocatedGreen() == 10.0f);
+  std::cout << "  [PASS] Assumed fallback demand (2.0 PCU) is safely bounded to minimum green (10.0s)." << std::endl;
+
+  // Verify starvation timer behavior for an opposing partially observed corridor:
+  // Both East and West approaches are unmeasured (each 2.0 PCU fallback -> total EW = 4.0 PCU).
+  // Because q_ew >= 1.0 PCU, the unserviced opposing corridor accumulates wait time at rate 1.0 s/s
+  // so an unobserved cross-street cannot be permanently starved if unmonitored vehicles are present.
+  ctrl.setMockTimeMs(5100);
+  ctrl.tick();
+  assert(ctrl.getEwWaitTime() > 2.9f && ctrl.getEwWaitTime() < 3.2f);
+  std::cout << "  [PASS] Opposing fallback demand guarantees anti-starvation wait accumulation." << std::endl;
+}
+
+void testTelemetryParserEdgeCases() {
+  std::cout << "\n--- C++ Test 8: TelemetryParser Structural & Syntax Robustness ---" << std::endl;
+  ParsedTelemetry pkt;
+
+  // Case A: Valid realistic telemetry packet from bridge_controller.py
+  const char* valid_json = "{\"seq\": 3, \"approach\": \"N\", \"valid\": true, \"Q\": 3, \"PCU\": 4.5, \"D_tail_m\": 41.21, \"timestamp_ms\": 1793298091336}";
+  bool res = TelemetryParser::parse(valid_json, strlen(valid_json), pkt);
+  assert(res == true);
+  assert(pkt.approach == 'N');
+  assert(pkt.q_count == 3);
+  assert(pkt.p_pcu == 4.5f);
+  assert(fabs(pkt.d_tail_m - 41.21f) < 0.01f);
+  assert(pkt.is_valid == true);
+  std::cout << "  [PASS] Valid telemetry JSON parsed with complete field fidelity." << std::endl;
+
+  // Case B: Truncated JSON packet (e.g. UART transmission interrupted mid-stream)
+  const char* truncated_json = "{\"seq\": 3, \"approach\": \"N\", \"valid\": true, \"Q\": 3, \"PCU\": ";
+  res = TelemetryParser::parse(truncated_json, strlen(truncated_json), pkt);
+  assert(res == false);
+  std::cout << "  [PASS] Truncated packet without closing brace rejected." << std::endl;
+
+  // Case C: Corrupted approach character
+  const char* bad_app_json = "{\"approach\": \"X\", \"valid\": true, \"Q\": 2, \"PCU\": 2.0}";
+  res = TelemetryParser::parse(bad_app_json, strlen(bad_app_json), pkt);
+  assert(res == false);
+  std::cout << "  [PASS] Invalid approach leg identifier ('X') rejected." << std::endl;
+
+  // Case D: Non-numeric / malformed float syntax
+  const char* bad_float_json = "{\"approach\": \"S\", \"valid\": true, \"Q\": 2, \"PCU\": nan}";
+  res = TelemetryParser::parse(bad_float_json, strlen(bad_float_json), pkt);
+  assert(res == false);
+  std::cout << "  [PASS] Non-finite float value ('nan') rejected." << std::endl;
+
+  // Case E: Missing mandatory field ("Q" missing)
+  const char* missing_q_json = "{\"approach\": \"E\", \"valid\": true, \"PCU\": 2.0}";
+  res = TelemetryParser::parse(missing_q_json, strlen(missing_q_json), pkt);
+  assert(res == false);
+  std::cout << "  [PASS] Incomplete packet missing mandatory 'Q' key rejected." << std::endl;
+
+  // Case F: Valid packet with false calibration gating
+  const char* uncalib_json = "{\"approach\": \"W\", \"valid\": false, \"Q\": 0, \"PCU\": 0.0}";
+  res = TelemetryParser::parse(uncalib_json, strlen(uncalib_json), pkt);
+  assert(res == true);
+  assert(pkt.approach == 'W');
+  assert(pkt.is_valid == false);
+  std::cout << "  [PASS] Uncalibrated pipeline packet parsed with valid=false preserved." << std::endl;
+}
+
+void testInternalSafetyAndRunawayClearance() {
+  std::cout << "\n--- C++ Test 9: Comprehensive Internal Safety Invariant Verification ---" << std::endl;
+  TrafficController ctrl;
+
+  // Normal initialization satisfies all invariants
+  assert(ctrl.verifyInternalSafety() == true);
+  std::cout << "  [PASS] Nominal startup state satisfies all physical and timing invariants." << std::endl;
+
+  // Advance through startup hold into NS Green
+  ctrl.setMockTimeMs(2100);
+  ctrl.tick();
+  assert(ctrl.getState() == STATE_NS_GREEN);
+
+  // Switch to NS Yellow
+  ctrl.switchState(STATE_NS_YELLOW);
+  assert(ctrl.getState() == STATE_NS_YELLOW);
+
+  // Runaway Yellow Clearance Test:
+  // yellow is configured for 3.0s, runaway threshold is kYellowTime + 1.0s = 4.0s.
+  // At elapsed = 4.5s (mock time = 2100 + 4500 = 6600), verifyInternalSafety() MUST trip and force FAILSAFE_FLASH!
+  ctrl.setMockTimeMs(6600);
+  ctrl.tick();
+  assert(ctrl.getState() == STATE_FAILSAFE_FLASH);
+  std::cout << "  [PASS] Runaway yellow clearance (> 4.0s) tripped internal safety into FAILSAFE_FLASH." << std::endl;
+}
+
 int main() {
   std::cout << "=================================================================" << std::endl;
-  std::cout << "  TrafficController C++ Native Verification Test Suite (v3.3)" << std::endl;
+  std::cout << "  TrafficController C++ Native Verification Test Suite (v3.4)" << std::endl;
   std::cout << "=================================================================" << std::endl;
 
   testInputValidation();
@@ -260,9 +370,12 @@ int main() {
   testContinuousWaitAccumulationAcrossClearance();
   testFailsafeAndIllegalTransitions();
   testCompleteSensorBlackoutFixedFallback();
+  testPartialObservationFallbackDemand();
+  testTelemetryParserEdgeCases();
+  testInternalSafetyAndRunawayClearance();
 
   std::cout << "\n=================================================================" << std::endl;
-  std::cout << "  ALL 6 C++ EMBEDDED CONTROLLER VERIFICATION TESTS PASSED (0 ERRORS)." << std::endl;
+  std::cout << "  ALL 9 C++ EMBEDDED CONTROLLER VERIFICATION TESTS PASSED (0 ERRORS)." << std::endl;
   std::cout << "=================================================================" << std::endl;
   return 0;
 }

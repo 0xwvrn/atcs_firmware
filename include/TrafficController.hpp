@@ -323,9 +323,49 @@ class TrafficController {
     }
   }
 
+  // Comprehensive Internal Safety & State-Transition Invariant Monitor
   bool verifyInternalSafety() const {
-    // Assert valid state enumeration
-    return (state_ >= STATE_ALL_RED_STARTUP && state_ <= STATE_FAILSAFE_FLASH);
+    // 1. Assert valid state enumeration
+    if (state_ < STATE_ALL_RED_STARTUP || state_ > STATE_FAILSAFE_FLASH) {
+      return false;
+    }
+
+    // 2. Invariant: Allocated green must be finite and within operational bounds
+    if (!isfinite(allocated_green_s_) || allocated_green_s_ < kMinGreen ||
+        allocated_green_s_ > max(kMaxGreen, kFixedFallbackGreen)) {
+      return false;
+    }
+
+    // 3. Invariant: Clock monotonicity and finite state elapsed duration
+    unsigned long now = getCurrentTimeMs();
+    if (now < state_start_time_ms_) {
+      return false; // Time backwards jump / overflow
+    }
+    float elapsed_s = (now - state_start_time_ms_) / 1000.0f;
+    if (!isfinite(elapsed_s) || elapsed_s < 0.0f) {
+      return false;
+    }
+
+    // 4. Runaway Clearance Guard: Clearance phases must terminate deterministically
+    // If yellow exceeds kYellowTime + 1.0s or all-red exceeds kAllRedTime + 1.0s, FSM has stalled
+    if (state_ == STATE_NS_YELLOW || state_ == STATE_EW_YELLOW) {
+      if (elapsed_s > (kYellowTime + 1.0f)) return false;
+    }
+    if (state_ == STATE_ALL_RED_TO_EW || state_ == STATE_ALL_RED_TO_NS) {
+      if (elapsed_s > (kAllRedTime + 1.0f)) return false;
+    }
+    if (state_ == STATE_ALL_RED_STARTUP) {
+      if (elapsed_s > (kStartupAllRedHold + 1.0f)) return false;
+    }
+
+    // 5. Output Conflict Invariant: State must never imply concurrent conflicting active phases
+    bool ns_active = (state_ == STATE_NS_GREEN || state_ == STATE_NS_YELLOW);
+    bool ew_active = (state_ == STATE_EW_GREEN || state_ == STATE_EW_YELLOW);
+    if (ns_active && ew_active) {
+      return false; // Asserts physical non-conflict invariant on internal state
+    }
+
+    return true;
   }
 
   // Safety Invariant: Conflicting corridors can NEVER both be green/yellow
