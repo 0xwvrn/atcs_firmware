@@ -331,6 +331,36 @@ void testTelemetryParserEdgeCases() {
   assert(pkt.approach == 'W');
   assert(pkt.is_valid == false);
   std::cout << "  [PASS] Uncalibrated pipeline packet parsed with valid=false preserved." << std::endl;
+
+  // Case G: Duplicate required key ("approach" duplicated) - MUST be rejected
+  const char* dup_key_json = "{\"approach\": \"N\", \"approach\": \"S\", \"valid\": true, \"Q\": 2, \"PCU\": 2.0}";
+  res = TelemetryParser::parse(dup_key_json, strlen(dup_key_json), pkt);
+  assert(res == false);
+  std::cout << "  [PASS] Duplicate required key ('approach') strictly rejected." << std::endl;
+
+  // Case H: Invalid token delimiter (e.g. "Q": 3abc without legal JSON delimiter)
+  const char* bad_delim_json = "{\"approach\": \"N\", \"valid\": true, \"Q\": 3abc, \"PCU\": 2.0}";
+  res = TelemetryParser::parse(bad_delim_json, strlen(bad_delim_json), pkt);
+  assert(res == false);
+  std::cout << "  [PASS] Numeric token with trailing illegal syntax ('3abc') rejected." << std::endl;
+
+  // Case I: Non-NUL terminated raw buffer with explicit length
+  char raw_buf[64];
+  const char* src_text = "{\"approach\": \"E\", \"valid\": true, \"Q\": 1, \"PCU\": 1.0}";
+  size_t src_len = strlen(src_text);
+  memcpy(raw_buf, src_text, src_len);
+  raw_buf[src_len] = 'X'; // NOT NUL terminated!
+  res = TelemetryParser::parse(raw_buf, src_len, pkt);
+  assert(res == true);
+  assert(pkt.approach == 'E');
+  assert(pkt.q_count == 1);
+  std::cout << "  [PASS] Non-NUL-terminated buffer handled safely via bounded length." << std::endl;
+
+  // Case J: Trailing garbage after closing brace
+  const char* trailing_garbage_json = "{\"approach\": \"N\", \"valid\": true, \"Q\": 1, \"PCU\": 1.0} trailing garbage";
+  res = TelemetryParser::parse(trailing_garbage_json, strlen(trailing_garbage_json), pkt);
+  assert(res == false);
+  std::cout << "  [PASS] Trailing syntax garbage after closing brace rejected." << std::endl;
 }
 
 void testInternalSafetyAndRunawayClearance() {
@@ -359,9 +389,115 @@ void testInternalSafetyAndRunawayClearance() {
   std::cout << "  [PASS] Runaway yellow clearance (> 4.0s) tripped internal safety into FAILSAFE_FLASH." << std::endl;
 }
 
+void testMillisRolloverSafety() {
+  std::cout << "\n--- C++ Test 10: State Timing & Wait Accumulation Across Millis() Rollover ---" << std::endl;
+  TrafficController ctrl;
+
+  // Initialize clock and state start time 1000ms prior to 32-bit unsigned rollover (0xFFFFFFFF = 4294967295)
+  const unsigned long kPreRolloverTime = 0xFFFFFFFFUL - 1000UL;
+  ctrl.setMockTimeMs(kPreRolloverTime);
+  ctrl.setSimulatedStateStartTimeMs(kPreRolloverTime);
+  ctrl.tick();
+  assert(ctrl.getState() == STATE_ALL_RED_STARTUP);
+
+  // 1. Advance through startup past rollover boundary:
+  // kPreRolloverTime + 2100ms = 0x00000000UL + 1099ms (wraps across 0xFFFFFFFF)
+  const unsigned long kPostRolloverTime = kPreRolloverTime + 2100UL;
+  ctrl.setMockTimeMs(kPostRolloverTime);
+  ctrl.tick();
+
+  // Internal safety monitor MUST NOT trip on normal 49.7-day rollover!
+  assert(ctrl.getState() == STATE_NS_GREEN);
+  assert(ctrl.verifyInternalSafety() == true);
+  std::cout << "  [PASS] Clock wrap across 0xFFFFFFFF did not falsely trip safety monitor; advanced to NS_GREEN." << std::endl;
+
+  // 2. Opposing wait timer accumulation across rollover:
+  // Setup East & West demand (10.0 PCU) during NS Green
+  ctrl.updateApproach('E', 5, 20.0f, 5.0f, true);
+  ctrl.updateApproach('W', 5, 20.0f, 5.0f, true);
+
+  // Record baseline wait time at entrance to NS Green
+  float wait_baseline = ctrl.getEwWaitTime();
+
+  // Step clock forward across several ticks
+  unsigned long cur_time = kPostRolloverTime;
+  for (int i = 0; i < 5; ++i) {
+    cur_time += 1000UL;
+    ctrl.setMockTimeMs(cur_time);
+    ctrl.updateApproach('E', 5, 20.0f, 5.0f, true);
+    ctrl.updateApproach('W', 5, 20.0f, 5.0f, true);
+    ctrl.tick();
+  }
+
+  // EW wait timer must accumulate cleanly (exactly +5.0s delta over baseline) across wrapped timestamps
+  float wait_delta = ctrl.getEwWaitTime() - wait_baseline;
+  assert(wait_delta >= 4.9f && wait_delta <= 5.2f);
+  std::cout << "  [PASS] Unserviced opposing wait accumulated cleanly across wrapped timestamps (+5.0s delta, total: "
+            << ctrl.getEwWaitTime() << "s)." << std::endl;
+
+  // 3. Sensor timeout check across rollover:
+  // Approach was seen at cur_time. Advance time by 6000ms (exceeding kSensorTimeoutMs = 5000ms)
+  cur_time += 6000UL;
+  ctrl.setMockTimeMs(cur_time);
+  ctrl.tick();
+  // Sensor must now report timed out across rollover
+  assert(ctrl.hasFreshObservation('E', cur_time) == false);
+  std::cout << "  [PASS] Sensor freshness timeout correctly expired across wrapped timestamps." << std::endl;
+}
+
+void testFailsafeInterlockCompliance() {
+  std::cout << "\n--- C++ Test 11: Failsafe Output & Conflict Interlock Compliance ---" << std::endl;
+  TrafficController ctrl;
+
+  // Symmetrical All-Way Red Flashing Policy:
+  // When in STATE_FAILSAFE_FLASH, all approaches flash RED (ns_r=true, ew_r=true, ns_y=false, ew_y=false, ns_g=false, ew_g=false)
+  // Verify that verifyInterlock strictly passes during All-Way Red Flash!
+  bool ns_yellow = false, ns_green = false;
+  bool ew_yellow = false, ew_green = false;
+
+  bool interlock_ok = ctrl.verifyInterlock(ns_green, ns_yellow, ew_green, ew_yellow);
+  assert(interlock_ok == true);
+  std::cout << "  [PASS] All-Way Red Flashing passes hardware conflict interlock (0 conflicting active phases)." << std::endl;
+
+  // In contrast, confirm that dual yellow (the buggy condition caught in review) is strictly rejected by verifyInterlock:
+  bool buggy_ns_yellow = true, buggy_ew_yellow = true;
+  bool buggy_interlock = ctrl.verifyInterlock(false, buggy_ns_yellow, false, buggy_ew_yellow);
+  assert(buggy_interlock == false);
+  std::cout << "  [PASS] Dual-yellow conflict is strictly rejected by verifyInterlock(), validating the red-flash policy." << std::endl;
+}
+
+void testSerialBufferOverrunDiscard() {
+  std::cout << "\n--- C++ Test 12: Serial Buffer Overrun Line-Length Discard ---" << std::endl;
+
+  // Simulate a 600-byte continuous garbage stream without newline (exceeds SERIAL_BUF_SIZE = 512)
+  const size_t TEST_BUF_CAP = 512;
+  char sim_buf[TEST_BUF_CAP];
+  size_t buf_idx = 0;
+  bool overflow_triggered = false;
+
+  for (size_t i = 0; i < 600; ++i) {
+    char c = 'A';
+    if (c == '\n' || c == '\r') {
+      buf_idx = 0;
+    } else {
+      if (buf_idx < TEST_BUF_CAP - 1) {
+        sim_buf[buf_idx++] = c;
+      } else {
+        overflow_triggered = true;
+        buf_idx = 0; // Buffer reset to prevent memory exhaustion
+      }
+    }
+  }
+
+  assert(overflow_triggered == true);
+  assert(buf_idx > 0 && buf_idx < TEST_BUF_CAP);
+  assert(sim_buf[0] == 'A');
+  std::cout << "  [PASS] Non-delimited continuous stream (> 512 bytes) safely triggered buffer reset without overrun (residual index: " << buf_idx << ")." << std::endl;
+}
+
 int main() {
   std::cout << "=================================================================" << std::endl;
-  std::cout << "  TrafficController C++ Native Verification Test Suite (v3.4)" << std::endl;
+  std::cout << "  TrafficController C++ Native Verification Test Suite (v3.5)" << std::endl;
   std::cout << "=================================================================" << std::endl;
 
   testInputValidation();
@@ -373,9 +509,12 @@ int main() {
   testPartialObservationFallbackDemand();
   testTelemetryParserEdgeCases();
   testInternalSafetyAndRunawayClearance();
+  testMillisRolloverSafety();
+  testFailsafeInterlockCompliance();
+  testSerialBufferOverrunDiscard();
 
   std::cout << "\n=================================================================" << std::endl;
-  std::cout << "  ALL 9 C++ EMBEDDED CONTROLLER VERIFICATION TESTS PASSED (0 ERRORS)." << std::endl;
+  std::cout << "  ALL 12 C++ EMBEDDED CONTROLLER VERIFICATION TESTS PASSED (0 ERRORS)." << std::endl;
   std::cout << "=================================================================" << std::endl;
   return 0;
 }

@@ -93,6 +93,12 @@ class TrafficController {
     time_mock_ms_ = mock_time_ms;
   }
 
+  // Set explicit start time for testing specific clock regimes (e.g. rollover)
+  void setSimulatedStateStartTimeMs(unsigned long start_time_ms) {
+    state_start_time_ms_ = start_time_ms;
+    last_tick_time_ms_ = start_time_ms;
+  }
+
   unsigned long getCurrentTimeMs() const {
 #ifdef ARDUINO
     if (use_mock_time_) return time_mock_ms_;
@@ -124,7 +130,9 @@ class TrafficController {
   // Checks whether an approach currently has an active, fresh measurement
   bool hasFreshObservation(char leg, unsigned long now) const {
     const ApproachState *app = getApproachPtrConst(leg);
-    return (app != nullptr) && app->is_valid && ((now - app->last_seen) <= kSensorTimeoutMs);
+    if (!app || !app->is_valid) return false;
+    unsigned long age_ms = now - app->last_seen;
+    return (age_ms <= kSensorTimeoutMs);
   }
 
   // Evaluates phase observation status and combined demand (N+S or E+W)
@@ -200,7 +208,8 @@ class TrafficController {
   // Execute State Machine cycle
   void tick() {
     unsigned long now = getCurrentTimeMs();
-    float elapsed_s = (now - state_start_time_ms_) / 1000.0f;
+    unsigned long state_elapsed_ms = now - state_start_time_ms_;
+    float elapsed_s = state_elapsed_ms / 1000.0f;
 
     // Safety Interlock Assertions
     if (!verifyInternalSafety()) {
@@ -220,8 +229,15 @@ class TrafficController {
       mode = MODE_FIXED_FALLBACK;
     }
 
-    // Track unserviced waiting times for anti-starvation protection
-    float dt_s = (last_tick_time_ms_ > 0 && now >= last_tick_time_ms_) ? (now - last_tick_time_ms_) / 1000.0f : 0.0f;
+    // Track unserviced waiting times for anti-starvation protection across wrap-safe dt
+    float dt_s = 0.0f;
+    if (last_tick_time_ms_ > 0) {
+      unsigned long dt_ms = now - last_tick_time_ms_;
+      // Guard against anomalous gaps while remaining wrap-safe
+      if (dt_ms <= 10000) {
+        dt_s = dt_ms / 1000.0f;
+      }
+    }
     last_tick_time_ms_ = now;
 
     // Continuous unserviced wait accumulation across all conflicting states (green, yellow, and clearance)
@@ -336,12 +352,15 @@ class TrafficController {
       return false;
     }
 
-    // 3. Invariant: Clock monotonicity and finite state elapsed duration
+    // 3. Invariant: Wrap-safe clock difference and finite state elapsed duration
+    // In unsigned 32-bit modulo arithmetic, now - state_start_time_ms_ yields true elapsed duration.
+    // An interval > 0x7FFFFFFFUL (~24.8 days) represents an apparent backwards clock jump.
     unsigned long now = getCurrentTimeMs();
-    if (now < state_start_time_ms_) {
-      return false; // Time backwards jump / overflow
+    unsigned long state_elapsed_ms = now - state_start_time_ms_;
+    if (state_elapsed_ms > 0x7FFFFFFFUL) {
+      return false; // Backwards clock jump / corrupted timestamp
     }
-    float elapsed_s = (now - state_start_time_ms_) / 1000.0f;
+    float elapsed_s = state_elapsed_ms / 1000.0f;
     if (!isfinite(elapsed_s) || elapsed_s < 0.0f) {
       return false;
     }
@@ -381,7 +400,8 @@ class TrafficController {
   float getEwWaitTime() const { return ew_wait_time_s_; }
 
   float getRemainingTime() const {
-    float elapsed = (getCurrentTimeMs() - state_start_time_ms_) / 1000.0f;
+    unsigned long elapsed_ms = getCurrentTimeMs() - state_start_time_ms_;
+    float elapsed = elapsed_ms / 1000.0f;
     float total = 0.0f;
     switch (state_) {
       case STATE_ALL_RED_STARTUP: total = kStartupAllRedHold; break;

@@ -16,12 +16,17 @@ const int PIN_EW_GREEN  = 9;
 // Global Controller Instance
 TrafficController controller;
 
-// Serial Ingestion Buffers
-String serial_buffer = "";
+// Fixed-size, zero-allocation serial ingestion buffer with overrun protection
+const size_t SERIAL_BUF_SIZE = 512;
+char serial_buffer[SERIAL_BUF_SIZE];
+size_t serial_buf_idx = 0;
+
 unsigned long last_telemetry_tx_ms = 0;
 unsigned long last_queue_rx_ms = 0;
 
 // Updates physical GPIO pins with hardcoded conflict interlock verification
+// Standards Policy (MUTCD 4D): In STATE_FAILSAFE_FLASH, all approaches flash RED (1 Hz, 500ms ON / 500ms OFF).
+// Flashing Red commands an All-Way Stop, eliminating opposing yellow/green right-of-way conflicts.
 void updatePhysicalSignals(SignalState state) {
   bool ns_r = false, ns_y = false, ns_g = false;
   bool ew_r = false, ew_y = false, ew_g = false;
@@ -55,14 +60,20 @@ void updatePhysicalSignals(SignalState state) {
       break;
 
     case STATE_FAILSAFE_FLASH:
-    default:
-      // Flashing yellow fail-safe
-      ns_y = (millis() / 500) % 2;
-      ew_y = (millis() / 500) % 2;
+    default: {
+      // Symmetrical 4-Way Intersection Failsafe: All-Way Red Flashing (1 Hz: 500ms ON / 500ms OFF)
+      bool flash_on = ((millis() / 500) % 2 == 0);
+      ns_r = flash_on;
+      ew_r = flash_on;
+      ns_y = false;
+      ew_y = false;
+      ns_g = false;
+      ew_g = false;
       break;
+    }
   }
 
-  // Hardware Safety Interlock: Physical impossibility of dual-green
+  // Hardware Safety Interlock: Physical impossibility of simultaneous active conflicting corridors
   if (!controller.verifyInterlock(ns_g, ns_y, ew_g, ew_y)) {
     digitalWrite(PIN_NS_RED, HIGH);
     digitalWrite(PIN_EW_RED, HIGH);
@@ -70,7 +81,7 @@ void updatePhysicalSignals(SignalState state) {
     digitalWrite(PIN_EW_YELLOW, LOW);
     digitalWrite(PIN_NS_GREEN, LOW);
     digitalWrite(PIN_EW_GREEN, LOW);
-    Serial.println("[CRITICAL] Hardware Interlock Tripped! Dual green prohibited.");
+    Serial.println("[CRITICAL] Hardware Interlock Tripped! Conflicting active signals prohibited.");
     return;
   }
 
@@ -85,9 +96,9 @@ void updatePhysicalSignals(SignalState state) {
 }
 
 // Parses and strictly validates telemetry packets using TelemetryParser
-void parseTelemetryPacket(const String &json) {
+void parseTelemetryPacket(const char* json, size_t len) {
   ParsedTelemetry pkt;
-  if (!TelemetryParser::parse(json.c_str(), json.length(), pkt)) {
+  if (!TelemetryParser::parse(json, len, pkt)) {
     Serial.println("[TELEMETRY RX REJECTED] Malformed, incomplete, or corrupted packet discarded.");
     return;
   }
@@ -118,16 +129,23 @@ void setup() {
 }
 
 void loop() {
-  // 1. Ingest Serial Telemetry from Vision Edge Node
+  // 1. Ingest Serial Telemetry from Vision Edge Node with fixed-size buffer & overrun protection
   while (Serial.available()) {
     char c = (char)Serial.read();
     if (c == '\n' || c == '\r') {
-      if (serial_buffer.length() > 0) {
-        parseTelemetryPacket(serial_buffer);
-        serial_buffer = "";
+      if (serial_buf_idx > 0) {
+        serial_buffer[serial_buf_idx] = '\0';
+        parseTelemetryPacket(serial_buffer, serial_buf_idx);
+        serial_buf_idx = 0;
       }
     } else {
-      serial_buffer += c;
+      if (serial_buf_idx < SERIAL_BUF_SIZE - 1) {
+        serial_buffer[serial_buf_idx++] = c;
+      } else {
+        // Line exceeded buffer capacity without newline: reject and reset to prevent memory exhaustion
+        serial_buf_idx = 0;
+        Serial.println("[WARN] Serial line buffer overrun; discarded non-delimited packet.");
+      }
     }
   }
 
