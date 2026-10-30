@@ -32,10 +32,15 @@ class TelemetryParser {
   // 2. Strict outer JSON object boundaries '{' and '}'.
   // 3. Exact key matching with legal token delimiters (',', '}', whitespace).
   // 4. Duplicate key rejection (ensures each required key appears exactly once).
-  // 5. Strict numeric and boolean syntax (rejects NaN, Inf, and trailing syntax garbage).
+  // 5. Strict numeric and boolean syntax (rejects NaN, Inf, negative values, and trailing syntax garbage).
   // 6. Value domain validity (approach in {N,S,E,W}, non-negative queue, PCU, distance).
   static bool parse(const char* buffer, size_t length, ParsedTelemetry &out) {
     if (!buffer || length < 7 || length > kMaxTelemetryLength) return false;
+
+    // Reject embedded null bytes in input
+    for (size_t i = 0; i < length; ++i) {
+      if (buffer[i] == '\0') return false;
+    }
 
     // Copy to stack working buffer to guarantee safe NUL termination without heap allocation
     char buf[kMaxTelemetryLength + 1];
@@ -63,23 +68,36 @@ class TelemetryParser {
     }
     if (brace_depth != 0) return false;
 
-    // 2. Locate and enforce uniqueness for each required key
+    // 2. Locate and enforce uniqueness for approach identifier ("approach" or "leg")
     const char* k_app = findKey(buf, start, end, "approach");
+    const char* k_leg = findKey(buf, start, end, "leg");
+    if (!k_app && !k_leg) return false; // Missing approach/leg key
+    if (k_app && k_leg) return false;   // Both "approach" and "leg" present is an ambiguous duplicate
+
+    const char* app_key_ptr = nullptr;
+    if (k_app) {
+      if (findNextKey(k_app + 10, end - (k_app + 10 - buf), "approach") != nullptr) return false;
+      app_key_ptr = k_app;
+    } else {
+      if (findNextKey(k_leg + 5, end - (k_leg + 5 - buf), "leg") != nullptr) return false;
+      app_key_ptr = k_leg;
+    }
+
+    // Locate remaining required keys: "valid", "Q", "PCU"
     const char* k_val = findKey(buf, start, end, "valid");
     const char* k_q   = findKey(buf, start, end, "Q");
     const char* k_pcu = findKey(buf, start, end, "PCU");
 
-    if (!k_app || !k_val || !k_q || !k_pcu) return false;
+    if (!k_val || !k_q || !k_pcu) return false;
 
     // Check for duplicate keys
-    if (findNextKey(k_app + 10, end - (k_app + 10 - buf), "approach") != nullptr) return false;
     if (findNextKey(k_val + 7, end - (k_val + 7 - buf), "valid") != nullptr) return false;
     if (findNextKey(k_q + 3, end - (k_q + 3 - buf), "Q") != nullptr) return false;
     if (findNextKey(k_pcu + 5, end - (k_pcu + 5 - buf), "PCU") != nullptr) return false;
 
-    // 3. Parse "approach": "X"
+    // 3. Parse approach: "X"
     char leg = '\0';
-    if (!parseApproach(k_app, end, buf, leg)) return false;
+    if (!parseApproach(app_key_ptr, end, buf, leg)) return false;
 
     // 4. Parse "valid": true / false
     bool valid = false;
@@ -110,7 +128,6 @@ class TelemetryParser {
   }
 
  private:
-  // Strict key search: must be enclosed in quotes and immediately preceded by '{' or ',' (ignoring whitespace)
   static const char* findKey(const char* buf, size_t start, size_t end, const char* key_name) {
     return findNextKey(buf + start, end - start + 1, key_name);
   }
@@ -152,7 +169,6 @@ class TelemetryParser {
     colon++;
     if (colon > buf + end || *colon != '\"') return false;
     colon++;
-    // Check legal delimiter after closing quote
     while (colon <= buf + end && isspace((unsigned char)*colon)) colon++;
     if (colon <= buf + end && !isLegalValueDelimiter(*colon)) return false;
     leg_out = leg;
@@ -186,7 +202,8 @@ class TelemetryParser {
     colon++;
     while (colon <= buf + end && isspace((unsigned char)*colon)) colon++;
     if (colon > buf + end) return false;
-    if (!isdigit((unsigned char)*colon) && *colon != '-') return false;
+    // Strictly reject negative signs for vehicle counts
+    if (!isdigit((unsigned char)*colon)) return false;
 
     char* endptr = nullptr;
     long val = strtol(colon, &endptr, 10);
@@ -203,7 +220,8 @@ class TelemetryParser {
     colon++;
     while (colon <= buf + end && isspace((unsigned char)*colon)) colon++;
     if (colon > buf + end) return false;
-    if (!isdigit((unsigned char)*colon) && *colon != '-' && *colon != '+') return false;
+    // Strictly reject negative numbers, NaN, and Inf
+    if (!isdigit((unsigned char)*colon) && *colon != '+') return false;
 
     char* endptr = nullptr;
     float val = strtof(colon, &endptr);

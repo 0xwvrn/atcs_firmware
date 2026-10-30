@@ -20,6 +20,8 @@ TrafficController controller;
 const size_t SERIAL_BUF_SIZE = 512;
 char serial_buffer[SERIAL_BUF_SIZE];
 size_t serial_buf_idx = 0;
+bool discard_until_newline = false;
+unsigned long discarded_packet_count = 0;
 
 unsigned long last_telemetry_tx_ms = 0;
 unsigned long last_queue_rx_ms = 0;
@@ -129,22 +131,33 @@ void setup() {
 }
 
 void loop() {
-  // 1. Ingest Serial Telemetry from Vision Edge Node with fixed-size buffer & overrun protection
+  // 1. Ingest Serial Telemetry from Vision Edge Node with discard-until-newline overflow protection
   while (Serial.available()) {
     char c = (char)Serial.read();
     if (c == '\n' || c == '\r') {
-      if (serial_buf_idx > 0) {
+      if (discard_until_newline) {
+        // Line terminator reached for an oversized/malformed packet; exit discard state
+        discard_until_newline = false;
+        serial_buf_idx = 0;
+      } else if (serial_buf_idx > 0) {
         serial_buffer[serial_buf_idx] = '\0';
         parseTelemetryPacket(serial_buffer, serial_buf_idx);
         serial_buf_idx = 0;
       }
     } else {
+      if (discard_until_newline) {
+        // Continue discarding characters belonging to the oversized packet
+        continue;
+      }
       if (serial_buf_idx < SERIAL_BUF_SIZE - 1) {
         serial_buffer[serial_buf_idx++] = c;
       } else {
-        // Line exceeded buffer capacity without newline: reject and reset to prevent memory exhaustion
+        // Buffer capacity reached without line terminator: trigger discard state
+        // This strictly prevents the tail of an oversized packet from being parsed as a new frame
+        discard_until_newline = true;
         serial_buf_idx = 0;
-        Serial.println("[WARN] Serial line buffer overrun; discarded non-delimited packet.");
+        discarded_packet_count++;
+        Serial.println("[WARN] Serial buffer overflow: discarding until next line terminator.");
       }
     }
   }

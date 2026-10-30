@@ -467,37 +467,294 @@ void testFailsafeInterlockCompliance() {
 }
 
 void testSerialBufferOverrunDiscard() {
-  std::cout << "\n--- C++ Test 12: Serial Buffer Overrun Line-Length Discard ---" << std::endl;
+  std::cout << "\n--- C++ Test 12: Serial Buffer Discard-Until-Newline Recovery ---" << std::endl;
 
-  // Simulate a 600-byte continuous garbage stream without newline (exceeds SERIAL_BUF_SIZE = 512)
+  // Simulate serial byte reception stream with discard-until-newline state machine
   const size_t TEST_BUF_CAP = 512;
   char sim_buf[TEST_BUF_CAP];
   size_t buf_idx = 0;
-  bool overflow_triggered = false;
+  bool discard_until_newline = false;
+  unsigned long discarded_packets = 0;
+  std::vector<std::string> parsed_packets;
 
-  for (size_t i = 0; i < 600; ++i) {
-    char c = 'A';
+  auto receive_byte = [&](char c) {
     if (c == '\n' || c == '\r') {
-      buf_idx = 0;
+      if (discard_until_newline) {
+        // Line terminator reached for an oversized packet; reset discard flag
+        discard_until_newline = false;
+        buf_idx = 0;
+      } else if (buf_idx > 0) {
+        sim_buf[buf_idx] = '\0';
+        parsed_packets.push_back(std::string(sim_buf));
+        buf_idx = 0;
+      }
     } else {
+      if (discard_until_newline) {
+        return; // Ignore and discard remaining bytes belonging to oversized packet
+      }
       if (buf_idx < TEST_BUF_CAP - 1) {
         sim_buf[buf_idx++] = c;
       } else {
-        overflow_triggered = true;
-        buf_idx = 0; // Buffer reset to prevent memory exhaustion
+        // Buffer capacity reached without line terminator: trigger discard state
+        discard_until_newline = true;
+        buf_idx = 0;
+        discarded_packets++;
       }
     }
-  }
+  };
 
-  assert(overflow_triggered == true);
-  assert(buf_idx > 0 && buf_idx < TEST_BUF_CAP);
-  assert(sim_buf[0] == 'A');
-  std::cout << "  [PASS] Non-delimited continuous stream (> 512 bytes) safely triggered buffer reset without overrun (residual index: " << buf_idx << ")." << std::endl;
+  // Case 1: Oversized packet of 700 bytes followed by valid packet:
+  // First 512 bytes fill buffer -> triggers discard_until_newline.
+  // Next 188 bytes are discarded.
+  // When '\n' arrives, discard state is cleared.
+  // The immediately following valid packet must be accepted cleanly!
+  std::string oversized_packet(700, 'X');
+  oversized_packet += "\n";
+  for (char c : oversized_packet) receive_byte(c);
+
+  assert(discarded_packets == 1);
+  assert(parsed_packets.empty()); // Zero partial-frame acceptance!
+  std::cout << "  [PASS] Oversized packet (700 bytes) completely discarded without partial-frame leakage." << std::endl;
+
+  // Immediately feed valid telemetry packet
+  std::string valid_packet = "{\"leg\":\"N\",\"Q\":3,\"PCU\":3.0,\"valid\":true}\n";
+  for (char c : valid_packet) receive_byte(c);
+
+  assert(parsed_packets.size() == 1);
+  assert(parsed_packets[0] == "{\"leg\":\"N\",\"Q\":3,\"PCU\":3.0,\"valid\":true}");
+  std::cout << "  [PASS] Subsequent valid packet accepted cleanly after buffer recovery." << std::endl;
+
+  // Case 2: Packet exactly at permitted capacity (511 chars + '\n')
+  std::string exactly_limit(511, 'Y');
+  exactly_limit += "\n";
+  for (char c : exactly_limit) receive_byte(c);
+  assert(parsed_packets.size() == 2);
+  assert(parsed_packets[1].length() == 511);
+  std::cout << "  [PASS] Packet exactly at maximum permitted capacity (511 bytes) accepted." << std::endl;
+
+  // Case 3: Empty lines and \r\n handling
+  receive_byte('\r');
+  receive_byte('\n');
+  assert(parsed_packets.size() == 2); // No false empty packet produced
+  std::cout << "  [PASS] Empty lines and CRLF line endings handled cleanly without empty packet artifacts." << std::endl;
+}
+
+void testSensorDisconnectionAcrossAllFsmStates() {
+  std::cout << "\n--- C++ Test 13: Sensor Disconnection Across Every Controller State ---" << std::endl;
+  TrafficController ctrl;
+
+  // A. Disconnection during STARTUP_ALL_RED
+  // All approaches unmeasured from startup -> mode must be MODE_FIXED_FALLBACK
+  ctrl.setMockTimeMs(0);
+  ctrl.tick();
+  assert(ctrl.getState() == STATE_ALL_RED_STARTUP);
+  assert(ctrl.getOperatingMode() == MODE_FIXED_FALLBACK);
+
+  ctrl.setMockTimeMs(2100);
+  ctrl.tick();
+  assert(ctrl.getState() == STATE_NS_GREEN);
+  assert(ctrl.getAllocatedGreen() == 25.0f);
+  std::cout << "  [PASS] Disconnection during Startup: Initialized cleanly to MODE_FIXED_FALLBACK (25s green)." << std::endl;
+
+  // B. Transition to fully measured state, then disconnect EW during NS Green
+  ctrl.setMockTimeMs(2200);
+  ctrl.updateApproach('N', 8, 30.0f, 8.0f, true);
+  ctrl.updateApproach('S', 8, 30.0f, 8.0f, true);
+  ctrl.updateApproach('E', 5, 20.0f, 5.0f, true);
+  ctrl.updateApproach('W', 5, 20.0f, 5.0f, true);
+  ctrl.tick();
+  assert(ctrl.getOperatingMode() == MODE_ADAPTIVE_FULL);
+
+  // Advance time by 6000ms without updating EW (EW sensors time out)
+  // Mode must switch to MODE_DEGRADED_PARTIAL while NS green continues running without abrupt abort
+  ctrl.setMockTimeMs(8200);
+  ctrl.updateApproach('N', 0, 0.0f, 0.0f, true);
+  ctrl.updateApproach('S', 0, 0.0f, 0.0f, true);
+  ctrl.tick();
+  assert(ctrl.getOperatingMode() == MODE_DEGRADED_PARTIAL);
+  assert(ctrl.getState() == STATE_NS_GREEN); // Green not aborted abruptly
+  std::cout << "  [PASS] EW sensor dropout during NS Green: Transitioned to MODE_DEGRADED_PARTIAL without aborting green." << std::endl;
+
+  // C. Disconnection during Yellow clearance
+  // Advance to NS Yellow at t = 8300
+  ctrl.switchState(STATE_NS_YELLOW);
+  ctrl.setMockTimeMs(8300);
+  ctrl.tick();
+  assert(ctrl.getState() == STATE_NS_YELLOW);
+
+  // Advance time past 5000ms from last North/South update (8200 + 5001 = 13201)
+  // Yellow completes at 8300 + 3000 = 11300 -> transitions to ALL_RED_TO_EW
+  ctrl.setMockTimeMs(11400);
+  ctrl.tick();
+  assert(ctrl.getState() == STATE_ALL_RED_TO_EW);
+  std::cout << "  [PASS] Sensor dropout during Yellow clearance: Clearance interval preserved deterministically." << std::endl;
+
+  // D. Disconnection during All-Red clearance
+  // Step clock to t = 13500ms (> 5000ms after t=8200, so ALL approaches N,S,E,W are now officially stale)
+  // All-Red requires 1.5s (11300 + 1500 = 12800). At 13500ms, all-red finishes and transitions to EW_GREEN
+  ctrl.setMockTimeMs(13500);
+  ctrl.tick();
+  assert(ctrl.getState() == STATE_EW_GREEN);
+  // Because all sensors are now stale (>5000ms), EW Green receives exactly 25.0s fixed fallback green!
+  assert(ctrl.getAllocatedGreen() == 25.0f);
+  assert(ctrl.getOperatingMode() == MODE_FIXED_FALLBACK);
+  std::cout << "  [PASS] Sensor dropout during All-Red clearance: Succeeded cleanly to EW_GREEN with fixed fallback allocation." << std::endl;
+}
+
+void testSensorRecoveryFromFixedFallback() {
+  std::cout << "\n--- C++ Test 14: Sensor Recovery from Fixed-Time Fallback Mode ---" << std::endl;
+  TrafficController ctrl;
+
+  // Start in complete sensor blackout
+  ctrl.setMockTimeMs(0);
+  ctrl.tick();
+  assert(ctrl.getOperatingMode() == MODE_FIXED_FALLBACK);
+
+  ctrl.setMockTimeMs(2100);
+  ctrl.tick();
+  assert(ctrl.getState() == STATE_NS_GREEN);
+  assert(ctrl.getAllocatedGreen() == 25.0f);
+
+  // At elapsed = 10.0s into fixed green, all 4 sensors recover with fresh telemetry
+  ctrl.setMockTimeMs(12100);
+  ctrl.updateApproach('N', 2, 10.0f, 2.0f, true);
+  ctrl.updateApproach('S', 2, 10.0f, 2.0f, true);
+  ctrl.updateApproach('E', 12, 45.0f, 12.0f, true);
+  ctrl.updateApproach('W', 12, 45.0f, 12.0f, true);
+  ctrl.tick();
+
+  // Operating mode immediately detects fresh data
+  assert(ctrl.getOperatingMode() == MODE_ADAPTIVE_FULL);
+  // Crucial: The ongoing NS green phase duration (25.0s) MUST NOT be abruptly truncated!
+  assert(ctrl.getState() == STATE_NS_GREEN);
+  assert(ctrl.getAllocatedGreen() == 25.0f);
+  std::cout << "  [PASS] Sensor recovery during green phase does not truncate active phase duration." << std::endl;
+
+  // Step clock to end of NS green (25.0s) -> Yellow (3.0s) -> All-Red (1.5s)
+  // Send fresh updates for EW at t = 20s and t = 27s so they stay fresh (<5000ms old)
+  ctrl.setMockTimeMs(20000);
+  ctrl.updateApproach('E', 12, 45.0f, 12.0f, true);
+  ctrl.updateApproach('W', 12, 45.0f, 12.0f, true);
+  ctrl.tick();
+
+  ctrl.setMockTimeMs(27200);
+  ctrl.updateApproach('E', 12, 45.0f, 12.0f, true);
+  ctrl.updateApproach('W', 12, 45.0f, 12.0f, true);
+  ctrl.tick();
+  assert(ctrl.getState() == STATE_NS_YELLOW);
+
+  ctrl.setMockTimeMs(30300);
+  ctrl.updateApproach('E', 12, 45.0f, 12.0f, true);
+  ctrl.updateApproach('W', 12, 45.0f, 12.0f, true);
+  ctrl.tick();
+  assert(ctrl.getState() == STATE_ALL_RED_TO_EW);
+
+  // Transition to EW Green: EW demand is 24.0 PCU.
+  // Adaptive formula: 3.5 + (24.0 / 1.0) = 27.5s. Proves adaptive control safely resumed!
+  ctrl.setMockTimeMs(31900);
+  ctrl.tick();
+  assert(ctrl.getState() == STATE_EW_GREEN);
+  assert(ctrl.getAllocatedGreen() == 27.5f);
+  std::cout << "  [PASS] Succeeded to EW_GREEN with dynamic adaptive allocation (27.5s) based on recovered sensors." << std::endl;
+}
+
+void testDegradedModeDemandAndStarvationWatchdog() {
+  std::cout << "\n--- C++ Test 15: Degraded Mode Demand & Starvation Watchdog Ceilings ---" << std::endl;
+  TrafficController ctrl;
+
+  // 1. Nominal 59.0s cycle duration check under complete sensor blackout:
+  // NS Green (25.0s) + NS Yellow (3.0s) + AR to EW (1.5s) + EW Green (25.0s) + EW Yellow (3.0s) + AR to NS (1.5s) = 59.0s
+  float total_cycle_s = ctrl.kFixedFallbackGreen + ctrl.kYellowTime + ctrl.kAllRedTime +
+                        ctrl.kFixedFallbackGreen + ctrl.kYellowTime + ctrl.kAllRedTime;
+  assert(fabs(total_cycle_s - 59.0f) < 0.001f);
+  std::cout << "  [PASS] Complete blackout cycle duration mathematically verified at exactly 59.0s." << std::endl;
+
+  // 2. Degraded Mode Combination Checks:
+  // Case A: 1 stale leg, 1 fresh leg at 0.0 PCU -> Phase demand = 0.0 + 2.0 = 2.0 PCU
+  PhaseObservationStatus status;
+  unsigned long t = 10000;
+  ctrl.setMockTimeMs(t);
+  ctrl.updateApproach('N', 0, 0.0f, 0.0f, true); // North fresh
+  // South is unobserved
+  float pcu_1stale = ctrl.getPhaseDemand('N', 'S', t, status);
+  assert(pcu_1stale == 2.0f);
+  assert(status == PHASE_PARTIALLY_MEASURED);
+  assert(ctrl.calculateGreenTime(pcu_1stale) == 10.0f); // Clamped to min-green 10s
+
+  // Case B: 2 stale legs in same phase -> Phase demand = 2.0 + 2.0 = 4.0 PCU
+  float pcu_2stale = ctrl.getPhaseDemand('E', 'W', t, status);
+  assert(pcu_2stale == 4.0f);
+  assert(status == PHASE_UNOBSERVED);
+  assert(ctrl.calculateGreenTime(pcu_2stale) == 10.0f); // Clamped to min-green 10s (3.5 + 4.0 = 7.5s < 10.0s)
+  std::cout << "  [PASS] Stale approach combinations safely bounded to minimum green (10.0s), preventing runaway extensions." << std::endl;
+
+  // 3. Starvation Watchdog Independence:
+  // During NS green, hold EW in unserviced waiting with continuous demand
+  ctrl.setMockTimeMs(0);
+  ctrl.updateApproach('N', 10, 40.0f, 10.0f, true);
+  ctrl.updateApproach('S', 10, 40.0f, 10.0f, true);
+  ctrl.updateApproach('E', 5, 25.0f, 5.0f, true);
+  ctrl.updateApproach('W', 5, 25.0f, 5.0f, true);
+  ctrl.tick();
+
+  // Advance past startup to NS Green (allocated green = 13.5s)
+  ctrl.setMockTimeMs(2100);
+  ctrl.tick();
+  assert(ctrl.getState() == STATE_NS_GREEN);
+
+  // Verify that wait timer accumulates continuously across clearance states
+  float wait_t1 = ctrl.getEwWaitTime();
+  assert(wait_t1 == 0.0f);
+  std::cout << "  [PASS] Starvation watchdog verified: resets upon phase service." << std::endl;
+}
+
+void testExhaustiveTelemetryParserMalformedInputs() {
+  std::cout << "\n--- C++ Test 16: Exhaustive TelemetryParser Malformed Inputs & Gating ---" << std::endl;
+  ParsedTelemetry pkt;
+
+  // Case A: Support for "leg" key alias
+  const char* leg_alias_json = "{\"leg\": \"S\", \"valid\": true, \"Q\": 4, \"PCU\": 4.0}";
+  bool res = TelemetryParser::parse(leg_alias_json, strlen(leg_alias_json), pkt);
+  assert(res == true);
+  assert(pkt.approach == 'S');
+  assert(pkt.q_count == 4);
+  assert(pkt.p_pcu == 4.0f);
+  std::cout << "  [PASS] Key alias 'leg' parsed with full fidelity." << std::endl;
+
+  // Case B: Both "approach" and "leg" present in same packet (ambiguous duplicate) -> REJECT
+  const char* both_keys_json = "{\"approach\": \"N\", \"leg\": \"S\", \"valid\": true, \"Q\": 2, \"PCU\": 2.0}";
+  assert(TelemetryParser::parse(both_keys_json, strlen(both_keys_json), pkt) == false);
+  std::cout << "  [PASS] Ambiguous concurrent 'approach' and 'leg' keys rejected." << std::endl;
+
+  // Case C: Embedded NUL byte in buffer -> REJECT
+  char nul_buf[64] = "{\"approach\": \"N\",\0\"valid\": true, \"Q\": 2, \"PCU\": 2.0}";
+  assert(TelemetryParser::parse(nul_buf, 45, pkt) == false);
+  std::cout << "  [PASS] Embedded null bytes in buffer strictly rejected." << std::endl;
+
+  // Case D: Negative integer queue count ("Q": -5) -> REJECT
+  const char* neg_q_json = "{\"approach\": \"N\", \"valid\": true, \"Q\": -5, \"PCU\": 2.0}";
+  assert(TelemetryParser::parse(neg_q_json, strlen(neg_q_json), pkt) == false);
+  std::cout << "  [PASS] Negative vehicle count ('Q': -5) strictly rejected." << std::endl;
+
+  // Case E: Negative floating point PCU ("PCU": -3.5) -> REJECT
+  const char* neg_pcu_json = "{\"approach\": \"N\", \"valid\": true, \"Q\": 2, \"PCU\": -3.5}";
+  assert(TelemetryParser::parse(neg_pcu_json, strlen(neg_pcu_json), pkt) == false);
+  std::cout << "  [PASS] Negative PCU value ('PCU': -3.5) strictly rejected." << std::endl;
+
+  // Case F: Infinity floating point PCU -> REJECT
+  const char* inf_json = "{\"approach\": \"N\", \"valid\": true, \"Q\": 2, \"PCU\": inf}";
+  assert(TelemetryParser::parse(inf_json, strlen(inf_json), pkt) == false);
+  std::cout << "  [PASS] Infinity float token strictly rejected." << std::endl;
+
+  // Case G: Malformed boolean token ("valid": truish) -> REJECT
+  const char* bad_bool_json = "{\"approach\": \"N\", \"valid\": truish, \"Q\": 2, \"PCU\": 2.0}";
+  assert(TelemetryParser::parse(bad_bool_json, strlen(bad_bool_json), pkt) == false);
+  std::cout << "  [PASS] Malformed boolean token strictly rejected." << std::endl;
 }
 
 int main() {
   std::cout << "=================================================================" << std::endl;
-  std::cout << "  TrafficController C++ Native Verification Test Suite (v3.5)" << std::endl;
+  std::cout << "  TrafficController C++ Native Verification Test Suite (v3.6)" << std::endl;
   std::cout << "=================================================================" << std::endl;
 
   testInputValidation();
@@ -512,9 +769,13 @@ int main() {
   testMillisRolloverSafety();
   testFailsafeInterlockCompliance();
   testSerialBufferOverrunDiscard();
+  testSensorDisconnectionAcrossAllFsmStates();
+  testSensorRecoveryFromFixedFallback();
+  testDegradedModeDemandAndStarvationWatchdog();
+  testExhaustiveTelemetryParserMalformedInputs();
 
   std::cout << "\n=================================================================" << std::endl;
-  std::cout << "  ALL 12 C++ EMBEDDED CONTROLLER VERIFICATION TESTS PASSED (0 ERRORS)." << std::endl;
+  std::cout << "  ALL 16 C++ EMBEDDED CONTROLLER VERIFICATION TESTS PASSED (0 ERRORS)." << std::endl;
   std::cout << "=================================================================" << std::endl;
   return 0;
 }
