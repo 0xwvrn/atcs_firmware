@@ -599,6 +599,57 @@ void testSensorDisconnectionAcrossAllFsmStates() {
   assert(ctrl.getAllocatedGreen() == 25.0f);
   assert(ctrl.getOperatingMode() == MODE_FIXED_FALLBACK);
   std::cout << "  [PASS] Sensor dropout during All-Red clearance: Succeeded cleanly to EW_GREEN with fixed fallback allocation." << std::endl;
+
+  // E. Disconnection during EW Green (Mirrored symmetry verification)
+  // Bring all sensors online with fresh demand at t = 14000
+  ctrl.setMockTimeMs(14000);
+  ctrl.updateApproach('N', 6, 25.0f, 6.0f, true);
+  ctrl.updateApproach('S', 6, 25.0f, 6.0f, true);
+  ctrl.updateApproach('E', 6, 25.0f, 6.0f, true);
+  ctrl.updateApproach('W', 6, 25.0f, 6.0f, true);
+  ctrl.tick();
+  assert(ctrl.getOperatingMode() == MODE_ADAPTIVE_FULL);
+
+  // NS sensors disconnect during EW green (at t = 19500, NS sensors exceed 5000ms timeout)
+  ctrl.setMockTimeMs(19500);
+  ctrl.updateApproach('E', 0, 0.0f, 0.0f, true);
+  ctrl.updateApproach('W', 0, 0.0f, 0.0f, true);
+  ctrl.tick();
+  assert(ctrl.getOperatingMode() == MODE_DEGRADED_PARTIAL);
+  assert(ctrl.getState() == STATE_EW_GREEN); // Active EW green not terminated prematurely
+  std::cout << "  [PASS] NS sensor dropout during EW Green: Transitioned to MODE_DEGRADED_PARTIAL without aborting EW green." << std::endl;
+
+  // F. Disconnection during EW Yellow clearance
+  ctrl.switchState(STATE_EW_YELLOW);
+  ctrl.setMockTimeMs(19600);
+  ctrl.tick();
+  assert(ctrl.getState() == STATE_EW_YELLOW);
+  // Advance 3.0s: EW Yellow clearance strictly preserved
+  ctrl.setMockTimeMs(22700);
+  ctrl.tick();
+  assert(ctrl.getState() == STATE_ALL_RED_TO_NS);
+  std::cout << "  [PASS] Sensor dropout during EW Yellow clearance: Clearance interval preserved deterministically." << std::endl;
+
+  // G. Disconnection during All-Red transition back to NS
+  // At t = 24800, all approaches are stale (>5000ms). All-red completes (1.5s) -> transitions to NS_GREEN
+  ctrl.setMockTimeMs(24800);
+  ctrl.tick();
+  assert(ctrl.getState() == STATE_NS_GREEN);
+  assert(ctrl.getAllocatedGreen() == 25.0f);
+  assert(ctrl.getOperatingMode() == MODE_FIXED_FALLBACK);
+  std::cout << "  [PASS] Sensor dropout during All-Red transition back to NS: Succeeded cleanly to NS_GREEN (25s fixed)." << std::endl;
+
+  // H. Sensor behavior during STATE_FAILSAFE_FLASH
+  // Once latched in FAILSAFE_FLASH, incoming telemetry (valid or invalid) must NEVER trigger autonomous phase transitions!
+  ctrl.switchState(STATE_FAILSAFE_FLASH);
+  assert(ctrl.getState() == STATE_FAILSAFE_FLASH);
+
+  ctrl.setMockTimeMs(26000);
+  ctrl.updateApproach('N', 10, 40.0f, 10.0f, true);
+  ctrl.updateApproach('S', 10, 40.0f, 10.0f, true);
+  ctrl.tick();
+  assert(ctrl.getState() == STATE_FAILSAFE_FLASH); // Strictly latched
+  std::cout << "  [PASS] Sensor telemetry during FAILSAFE_FLASH: FSM strictly latched against unintended revival." << std::endl;
 }
 
 void testSensorRecoveryFromFixedFallback() {
