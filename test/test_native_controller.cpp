@@ -772,6 +772,18 @@ void testExhaustiveTelemetryParserMalformedInputs() {
   assert(pkt.p_pcu == 4.0f);
   std::cout << "  [PASS] Key alias 'leg' parsed with full fidelity." << std::endl;
 
+  // Case A2: Support for "d_tail" alias
+  const char* d_tail_alias_json = "{\"approach\": \"E\", \"valid\": true, \"Q\": 5, \"PCU\": 5.0, \"d_tail\": 33.5}";
+  assert(TelemetryParser::parse(d_tail_alias_json, strlen(d_tail_alias_json), pkt) == true);
+  assert(pkt.approach == 'E');
+  assert(fabs(pkt.d_tail_m - 33.5f) < 0.01f);
+  std::cout << "  [PASS] Key alias 'd_tail' parsed with full fidelity." << std::endl;
+
+  // Case A3: Both "D_tail_m" and "d_tail" present -> REJECT ambiguous duplicate
+  const char* both_dtail_json = "{\"approach\": \"E\", \"valid\": true, \"Q\": 5, \"PCU\": 5.0, \"D_tail_m\": 33.5, \"d_tail\": 33.5}";
+  assert(TelemetryParser::parse(both_dtail_json, strlen(both_dtail_json), pkt) == false);
+  std::cout << "  [PASS] Ambiguous concurrent 'D_tail_m' and 'd_tail' keys rejected." << std::endl;
+
   // Case B: Both "approach" and "leg" present in same packet (ambiguous duplicate) -> REJECT
   const char* both_keys_json = "{\"approach\": \"N\", \"leg\": \"S\", \"valid\": true, \"Q\": 2, \"PCU\": 2.0}";
   assert(TelemetryParser::parse(both_keys_json, strlen(both_keys_json), pkt) == false);

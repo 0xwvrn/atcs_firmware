@@ -107,12 +107,18 @@ class TelemetryParser {
     int q_val = 0;
     if (!parseInt(k_q, end, buf, q_val)) return false;
 
-    // 6. Parse "D_tail_m": <float> (optional, defaults to 0.0)
+    // 6. Parse "D_tail_m" or "d_tail": <float> (optional, defaults to 0.0)
     float d_tail = 0.0f;
     const char* k_d = findKey(buf, start, end, "D_tail_m");
-    if (k_d) {
-      if (findNextKey(k_d + 10, end - (k_d + 10 - buf), "D_tail_m") != nullptr) return false;
-      if (!parseFloat(k_d, end, buf, d_tail)) return false;
+    const char* k_d_alias = findKey(buf, start, end, "d_tail");
+    if (k_d && k_d_alias) return false; // Ambiguous concurrent duplicate
+
+    const char* d_key_ptr = k_d ? k_d : k_d_alias;
+    if (d_key_ptr) {
+      const char* key_name = k_d ? "D_tail_m" : "d_tail";
+      size_t key_len = strlen(key_name);
+      if (findNextKey(d_key_ptr + key_len + 2, end - (d_key_ptr + key_len + 2 - buf), key_name) != nullptr) return false;
+      if (!parseFloat(d_key_ptr, end, buf, d_tail)) return false;
     }
 
     // 7. Parse "PCU": <float>

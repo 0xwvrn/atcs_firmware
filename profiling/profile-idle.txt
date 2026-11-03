@@ -1,0 +1,1268 @@
+=== ATCS Hardware Profiling Log: IDLE ===
+Started: 2026-10-31 00:27:21
+
+============================================
+
+{"state":"EW_GREEN","rem":0.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":2.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":2.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":1.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":1.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":0.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":0.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_NS","rem":1.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_NS","rem":0.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_NS","rem":0.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":24.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":24.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":23.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":23.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":22.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":22.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":21.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":21.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":20.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":20.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.21 us | Max: 293 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19998 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.01 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.27 us | Max: 18 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 2 us | Avg: 2.59 us | Max: 16 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 180 us | Avg: 190.45 us | Max: 244 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"NS_GREEN","rem":19.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":19.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":18.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":18.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":17.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":17.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":16.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":16.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":15.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":15.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":14.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":14.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":13.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":13.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":12.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":12.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":11.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":11.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":10.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":10.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.65 us | Max: 298 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19999 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.00 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.31 us | Max: 19 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 2 us | Avg: 2.18 us | Max: 13 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 196 us | Avg: 199.85 us | Max: 251 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"NS_GREEN","rem":9.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":9.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":8.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":8.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":7.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":7.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":6.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":6.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":5.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":5.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":4.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":4.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":3.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":3.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":2.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":2.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":1.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":1.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":0.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":3.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.02 us | Max: 258 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19998 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.01 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.26 us | Max: 15 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 2 us | Avg: 2.19 us | Max: 13 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 179 us | Avg: 186.30 us | Max: 215 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"NS_YELLOW","rem":2.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":1.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":1.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":0.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":0.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_EW","rem":1.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_EW","rem":0.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_EW","rem":0.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":24.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":24.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":23.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":23.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":22.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":22.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":21.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":21.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":20.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":20.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":19.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":19.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.58 us | Max: 295 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19998 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.01 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.32 us | Max: 20 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.14 us | Max: 12 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 189 us | Avg: 197.95 us | Max: 249 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"EW_GREEN","rem":18.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":18.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":17.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":17.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":16.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":16.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":15.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":15.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":14.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":14.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":13.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":13.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":12.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":12.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":11.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":11.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":10.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":10.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":9.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":9.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.36 us | Max: 293 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19999 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.00 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.27 us | Max: 18 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.11 us | Max: 16 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 182 us | Avg: 194.40 us | Max: 244 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"EW_GREEN","rem":8.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":8.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":7.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":7.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":6.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":6.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":5.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":5.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":4.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":4.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":3.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":3.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":2.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":2.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":1.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":1.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":0.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":0.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":2.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":2.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.41 us | Max: 273 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19998 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.01 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.31 us | Max: 17 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.14 us | Max: 12 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 190 us | Avg: 193.80 us | Max: 228 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"EW_YELLOW","rem":1.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":1.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":0.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":0.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_NS","rem":1.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_NS","rem":0.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_NS","rem":0.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":24.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":24.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":23.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":23.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":22.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":22.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":21.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":21.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":20.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":20.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":19.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":19.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":18.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.26 us | Max: 281 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19998 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.01 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.27 us | Max: 18 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.10 us | Max: 14 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 180 us | Avg: 192.00 us | Max: 234 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"NS_GREEN","rem":18.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":17.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":17.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":16.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":16.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":15.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":15.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":14.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":14.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":13.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":13.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":12.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":12.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":11.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":11.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":10.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":10.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":9.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":9.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":8.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.61 us | Max: 299 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19999 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.00 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.31 us | Max: 20 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.14 us | Max: 12 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 190 us | Avg: 198.85 us | Max: 252 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"NS_GREEN","rem":8.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":7.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":7.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":6.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":6.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":5.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":5.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":4.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":4.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":3.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":3.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":2.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":2.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":1.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":1.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":0.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":3.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":2.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":2.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":1.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 25.98 us | Max: 256 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19998 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.01 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.26 us | Max: 15 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.10 us | Max: 13 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 178 us | Avg: 185.25 us | Max: 213 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"NS_YELLOW","rem":0.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":0.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_EW","rem":1.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_EW","rem":0.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_EW","rem":0.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":24.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":24.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":23.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":23.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":22.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":22.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":21.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":21.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":20.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":20.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":19.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":19.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":18.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":18.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":17.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.61 us | Max: 303 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19998 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.01 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.32 us | Max: 20 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.14 us | Max: 12 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 190 us | Avg: 198.65 us | Max: 256 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"EW_GREEN","rem":17.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":16.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":16.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":15.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":15.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":14.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":14.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":13.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":13.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":12.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":12.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":11.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":11.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":10.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":10.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":9.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":9.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":8.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":8.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":7.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.34 us | Max: 293 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19999 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.00 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.27 us | Max: 18 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.11 us | Max: 16 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 182 us | Avg: 193.85 us | Max: 244 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"EW_GREEN","rem":7.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":6.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":6.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":5.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":5.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":4.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":4.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":3.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":3.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":2.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":2.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":1.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":1.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":0.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":0.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":2.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":2.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":1.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":1.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":0.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.36 us | Max: 272 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19998 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.01 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.31 us | Max: 17 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.14 us | Max: 12 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 189 us | Avg: 192.65 us | Max: 227 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"EW_YELLOW","rem":0.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_NS","rem":1.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_NS","rem":0.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_NS","rem":0.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":24.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":24.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":23.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":23.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":22.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":22.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":21.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":21.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":20.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":20.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":19.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":19.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":18.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":18.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":17.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":17.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.23 us | Max: 288 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19998 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.01 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.27 us | Max: 18 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.10 us | Max: 14 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 180 us | Avg: 191.30 us | Max: 242 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"NS_GREEN","rem":16.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":16.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":15.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":15.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":14.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":14.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":13.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":13.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":12.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":12.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":11.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":11.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":10.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":10.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":9.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":9.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":8.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":8.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":7.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":7.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.48 us | Max: 297 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19999 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.00 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.31 us | Max: 20 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.14 us | Max: 12 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 188 us | Avg: 195.70 us | Max: 250 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"NS_GREEN","rem":6.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":6.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":5.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":5.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":4.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":4.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":3.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":3.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":2.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":2.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":1.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":1.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":0.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":0.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":2.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":2.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":1.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":1.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":0.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":0.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.16 us | Max: 257 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19998 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.01 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.30 us | Max: 21 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.11 us | Max: 13 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 179 us | Avg: 188.40 us | Max: 214 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"ALL_RED_TO_EW","rem":0.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_EW","rem":0.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":24.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":24.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":23.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":23.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":22.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":22.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":21.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":21.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":20.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":20.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":19.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":19.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":18.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":18.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":17.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":17.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":16.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":16.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.67 us | Max: 311 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19998 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.01 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.31 us | Max: 20 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.14 us | Max: 14 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 190 us | Avg: 200.05 us | Max: 262 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"EW_GREEN","rem":15.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":15.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":14.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":14.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":13.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":13.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":12.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":12.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":11.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":11.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":10.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":10.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":9.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":9.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":8.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":8.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":7.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":7.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":6.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":6.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.24 us | Max: 283 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19999 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.00 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.27 us | Max: 18 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.11 us | Max: 16 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 181 us | Avg: 191.55 us | Max: 234 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"EW_GREEN","rem":5.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":5.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":4.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":4.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":3.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":3.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":2.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":2.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":1.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":1.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":0.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":0.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":2.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":2.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":1.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":1.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":0.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":0.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_NS","rem":1.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_NS","rem":0.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.34 us | Max: 264 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19998 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.01 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.31 us | Max: 17 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.14 us | Max: 12 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 189 us | Avg: 192.15 us | Max: 219 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"ALL_RED_TO_NS","rem":0.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":24.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":24.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":23.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":23.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":22.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":22.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":21.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":21.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":20.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":20.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":19.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":19.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":18.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":18.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":17.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":17.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":16.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":16.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":15.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.29 us | Max: 285 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19998 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.01 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.27 us | Max: 18 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.11 us | Max: 17 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 185 us | Avg: 192.60 us | Max: 235 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"NS_GREEN","rem":15.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":14.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":14.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":13.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":13.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":12.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":12.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":11.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":11.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":10.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":10.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":9.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":9.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":8.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":8.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":7.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":7.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":6.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":6.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":5.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.54 us | Max: 293 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19999 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.00 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.31 us | Max: 20 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.14 us | Max: 12 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 190 us | Avg: 197.30 us | Max: 246 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"NS_GREEN","rem":5.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":4.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":4.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":3.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":3.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":2.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":2.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":1.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":1.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":0.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":0.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":2.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":2.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":1.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":1.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":0.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":0.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_EW","rem":1.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_EW","rem":0.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_EW","rem":0.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.19 us | Max: 249 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19998 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.01 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.31 us | Max: 21 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.10 us | Max: 13 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 179 us | Avg: 189.15 us | Max: 219 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"EW_GREEN","rem":24.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":24.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":23.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":23.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":22.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":22.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":21.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":21.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":20.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":20.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":19.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":19.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":18.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":18.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":17.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":17.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":16.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":16.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":15.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":15.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.65 us | Max: 310 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19999 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.00 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.31 us | Max: 20 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.14 us | Max: 14 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 195 us | Avg: 199.55 us | Max: 261 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"EW_GREEN","rem":14.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":13.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":13.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":12.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":12.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":11.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":11.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":10.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":10.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":9.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":9.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":8.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":8.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":7.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":7.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":6.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":6.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":5.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":5.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":4.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.08 us | Max: 259 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19999 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.00 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.26 us | Max: 15 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.10 us | Max: 14 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 179 us | Avg: 187.80 us | Max: 215 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"EW_GREEN","rem":4.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":3.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":3.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":2.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":2.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":1.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":1.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":0.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":0.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":2.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":2.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":1.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":1.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":0.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":0.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_NS","rem":1.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_NS","rem":0.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_NS","rem":0.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":24.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":24.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.34 us | Max: 264 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19998 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.01 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.31 us | Max: 17 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.14 us | Max: 12 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 188 us | Avg: 191.95 us | Max: 219 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"NS_GREEN","rem":23.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":23.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":22.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":22.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":21.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":21.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":20.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":20.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":19.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":19.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":18.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":18.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":17.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":17.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":16.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":16.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":15.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":15.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":14.7,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":14.2,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.26 us | Max: 282 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19999 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.00 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.26 us | Max: 18 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.10 us | Max: 14 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 185 us | Avg: 192.30 us | Max: 235 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"NS_GREEN","rem":13.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":13.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":12.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":12.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":11.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":11.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":10.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":10.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":9.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":9.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":8.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":8.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":7.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":7.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":6.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":6.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":5.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":5.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":4.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":4.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.39 us | Max: 267 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19999 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.00 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.30 us | Max: 17 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.14 us | Max: 11 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 189 us | Avg: 193.75 us | Max: 224 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"NS_GREEN","rem":3.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":3.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":2.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":2.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":1.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":1.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":0.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":0.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":2.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":2.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":1.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":1.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":0.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_YELLOW","rem":0.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_EW","rem":1.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_EW","rem":0.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_EW","rem":0.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":24.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":24.1,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":23.6,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.23 us | Max: 250 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19998 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.01 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.31 us | Max: 19 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.10 us | Max: 13 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 178 us | Avg: 189.85 us | Max: 214 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"EW_GREEN","rem":23.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":22.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":22.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":21.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":21.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":20.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":20.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":19.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":19.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":18.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":18.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":17.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":17.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":16.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":16.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":15.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":15.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":14.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":14.0,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":13.5,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.61 us | Max: 294 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19999 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.00 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.31 us | Max: 20 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.14 us | Max: 14 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 195 us | Avg: 198.75 us | Max: 245 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"EW_GREEN","rem":12.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":12.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":11.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":11.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":10.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":10.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":9.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":9.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":8.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":8.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":7.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":7.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":6.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":6.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":5.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":5.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":4.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":4.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":3.9,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":3.4,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+
+========================================================
+  ATCS RUNTIME PROFILE REPORT (Sample Window: 500 iterations)
+========================================================
+1. Loop Execution Time (CPU work):
+   - Min: 18 us | Avg: 26.04 us | Max: 259 us
+2. Loop Interval (Target: 20000 us / 50.0 Hz):
+   - Min: 19999 us | Avg: 20166.00 us | Max: 103001 us
+3. Loop Period Jitter (|interval - 20000 us|):
+   - Min: 0 us | Avg: 166.00 us | Max: 83001 us
+4. Controller Tick Execution Time (FSM):
+   - Min: 6 us | Avg: 6.26 us | Max: 15 us
+5. GPIO Update Execution Time (Actuation):
+   - Min: 3 us | Avg: 3.10 us | Max: 14 us
+6. Telemetry Parser: (No packets received in window)
+7. Periodic Serial Diagnostics Time (Tx count: 20):
+   - Min: 179 us | Avg: 186.75 us | Max: 214 us
+8. Memory Headroom:
+   - Current Free Heap: 8755575 bytes
+   - Minimum Free Heap: 8750323 bytes
+   - Stack High-Water Mark: 5964 bytes remaining
+========================================================
+
+{"state":"EW_GREEN","rem":2.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":2.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":1.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":1.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":0.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_GREEN","rem":0.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":2.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":2.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":1.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":1.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":0.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"EW_YELLOW","rem":0.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_NS","rem":1.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_NS","rem":0.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"ALL_RED_TO_NS","rem":0.3,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
+{"state":"NS_GREEN","rem":24.8,"alloc":25.0,"Q":[0,0,0,0],"PCU":[0.0,0.0,0.0,0.0]}
