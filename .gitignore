@@ -8,3 +8,5 @@ compile_commands.json
 test/test_native_controller
 test/benchmark_runtime_profile
 test/stress_test_native
+venv/
+.venv/

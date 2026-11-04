@@ -56,18 +56,25 @@ struct ApproachState {
 class TrafficController {
  public:
   // Timing parameters (in seconds)
-  const float kStartupAllRedHold = 2.0f;     // Physical initial all-red clearance before any green
-  const float kStartupLostTime = 3.5f;       // Saturation flow startup inertia in green allocation formula
-  const float kMinGreen = 10.0f;             // Configured minimum vehicle green interval
-  const float kMaxGreen = 45.0f;             // Maximum green phase ceiling
-  const float kYellowTime = 3.0f;            // Yellow clearance buffer
-  const float kAllRedTime = 1.5f;            // Intersection all-red clearance buffer
-  const float kDischargeRatePerLane = 0.5f;   // Saturation flow per lane (0.5 PCU/sec ~= 1800 PCU/hr)
-  const float kPhaseDischargeRate = 1.0f;     // Concurrent dual-approach phase rate (2 * 0.5 = 1.0 PCU/sec)
-  const float kMaxWaitStarvation = 50.0f;    // Operational unserviced waiting ceiling before forced switch
-  const float kFixedFallbackGreen = 25.0f;   // Predefined fixed-time allocation during complete sensor blackout
-  const unsigned long kSensorTimeoutMs = 5000;// Sensor freshness timeout threshold
-  const float kSingleLegFallbackPCU = 2.0f;  // Fallback demand per unmeasured approach
+  static constexpr float kStartupAllRedHold = 2.0f;     // Physical initial all-red clearance before any green
+  static constexpr float kStartupLostTime = 3.5f;       // Saturation flow startup inertia in green allocation formula
+  static constexpr float kMinGreen = 10.0f;             // Configured minimum vehicle green interval
+  static constexpr float kMaxGreen = 45.0f;             // Maximum green phase ceiling
+  static constexpr float kYellowTime = 3.0f;            // Yellow clearance buffer
+  static constexpr float kAllRedTime = 1.5f;            // Intersection all-red clearance buffer
+  static constexpr float kDischargeRatePerLane = 0.5f;  // Saturation flow per lane (0.5 PCU/sec ~= 1800 PCU/hr)
+  static constexpr float kPhaseDischargeRate = 1.0f;    // Concurrent dual-approach phase rate (2 * 0.5 = 1.0 PCU/sec)
+  static constexpr float kMaxWaitStarvation = 50.0f;    // Operational unserviced waiting ceiling before forced switch
+  static constexpr float kFixedFallbackGreen = 25.0f;   // Predefined fixed-time allocation during complete sensor blackout
+  static constexpr unsigned long kSensorTimeoutMs = 5000; // Sensor freshness timeout threshold
+  static constexpr float kSingleLegFallbackPCU = 2.0f;  // Fallback demand per unmeasured approach
+
+  // Operational and safety threshold constants
+  static constexpr unsigned long kMaxTickGapMs = 10000UL;          // Maximum tick interval before suppressing wait accumulation
+  static constexpr float kMinOpposingDemandPCU = 1.0f;             // Opposing PCU threshold for wait accumulation, gap-out, and starvation
+  static constexpr float kGapOutActiveThresholdPCU = 0.5f;         // Active-phase PCU dissipation threshold for early gap-out
+  static constexpr float kClearanceRunawayMarginS = 1.0f;          // Runaway clearance tolerance margin in seconds
+  static constexpr unsigned long kMaxValidElapsedMs = 0x7FFFFFFFUL;// Unsigned 32-bit half-range clock-jump boundary
 
   TrafficController() {
     time_mock_ms_ = 0;
@@ -163,14 +170,7 @@ class TrafficController {
     PhaseObservationStatus ns_status, ew_status;
     getPhaseDemand('N', 'S', now, ns_status);
     getPhaseDemand('E', 'W', now, ew_status);
-
-    if (ns_status == PHASE_FULLY_MEASURED && ew_status == PHASE_FULLY_MEASURED) {
-      return MODE_ADAPTIVE_FULL;
-    } else if (ns_status == PHASE_UNOBSERVED && ew_status == PHASE_UNOBSERVED) {
-      return MODE_FIXED_FALLBACK;
-    } else {
-      return MODE_DEGRADED_PARTIAL;
-    }
+    return classifyMode(ns_status, ew_status);
   }
 
   // Calculate dynamic green time based on total concurrent phase demand (PCU)
@@ -212,7 +212,7 @@ class TrafficController {
     float elapsed_s = state_elapsed_ms / 1000.0f;
 
     // Safety Interlock Assertions
-    if (!verifyInternalSafety()) {
+    if (!verifyInternalSafety(state_elapsed_ms, elapsed_s)) {
       switchState(STATE_FAILSAFE_FLASH);
       return;
     }
@@ -222,71 +222,35 @@ class TrafficController {
     float q_ns = getPhaseDemand('N', 'S', now, ns_status);
     float q_ew = getPhaseDemand('E', 'W', now, ew_status);
 
-    ControllerMode mode = MODE_DEGRADED_PARTIAL;
-    if (ns_status == PHASE_FULLY_MEASURED && ew_status == PHASE_FULLY_MEASURED) {
-      mode = MODE_ADAPTIVE_FULL;
-    } else if (ns_status == PHASE_UNOBSERVED && ew_status == PHASE_UNOBSERVED) {
-      mode = MODE_FIXED_FALLBACK;
-    }
+    ControllerMode mode = classifyMode(ns_status, ew_status);
 
     // Track unserviced waiting times for anti-starvation protection across wrap-safe dt
     float dt_s = 0.0f;
     if (last_tick_time_ms_ > 0) {
       unsigned long dt_ms = now - last_tick_time_ms_;
       // Guard against anomalous gaps while remaining wrap-safe
-      if (dt_ms <= 10000) {
+      if (dt_ms <= kMaxTickGapMs) {
         dt_s = dt_ms / 1000.0f;
       }
     }
     last_tick_time_ms_ = now;
 
     // Continuous unserviced wait accumulation across all conflicting states (green, yellow, and clearance)
-    if (state_ != STATE_EW_GREEN) {
-      if (q_ew >= 1.0f) {
-        ew_wait_time_s_ += dt_s;
-      } else {
-        ew_wait_time_s_ = 0.0f;
-      }
-    } else {
-      ew_wait_time_s_ = 0.0f; // Reset EW wait timer upon receiving green service
-    }
-
-    if (state_ != STATE_NS_GREEN) {
-      if (q_ns >= 1.0f) {
-        ns_wait_time_s_ += dt_s;
-      } else {
-        ns_wait_time_s_ = 0.0f;
-      }
-    } else {
-      ns_wait_time_s_ = 0.0f; // Reset NS wait timer upon receiving green service
-    }
+    updateCorridorWaitTime(state_ == STATE_EW_GREEN, q_ew, dt_s, ew_wait_time_s_);
+    updateCorridorWaitTime(state_ == STATE_NS_GREEN, q_ns, dt_s, ns_wait_time_s_);
 
     switch (state_) {
       case STATE_ALL_RED_STARTUP:
         if (elapsed_s >= kStartupAllRedHold) {
-          allocated_green_s_ = (mode == MODE_FIXED_FALLBACK) ? kFixedFallbackGreen : calculateGreenTime(q_ns);
-          ns_wait_time_s_ = 0.0f;
-          switchState(STATE_NS_GREEN);
+          enterGreenPhase(STATE_NS_GREEN, mode, q_ns, ns_wait_time_s_);
         }
         break;
 
-      case STATE_NS_GREEN: {
-        // Gap-Out Policy: Strictly requires MODE_ADAPTIVE_FULL (both corridors FULLY MEASURED)
-        // Partially measured or fallback demand is strictly barred from truncating active green
-        bool gap_out = (mode == MODE_ADAPTIVE_FULL) &&
-                       (elapsed_s >= kMinGreen) &&
-                       (q_ns < 0.5f) &&
-                       (q_ew >= 1.0f);
-
-        // Anti-Starvation Protection (EW continuous unserviced wait ceiling)
-        bool starvation = (ew_wait_time_s_ >= kMaxWaitStarvation) && (q_ew >= 1.0f);
-        bool max_green_expired = (elapsed_s >= allocated_green_s_);
-
-        if (gap_out || starvation || max_green_expired) {
+      case STATE_NS_GREEN:
+        if (shouldTerminateGreen(mode, elapsed_s, q_ns, q_ew, ew_wait_time_s_)) {
           switchState(STATE_NS_YELLOW);
         }
         break;
-      }
 
       case STATE_NS_YELLOW:
         if (elapsed_s >= kYellowTime) {
@@ -296,27 +260,15 @@ class TrafficController {
 
       case STATE_ALL_RED_TO_EW:
         if (elapsed_s >= kAllRedTime) {
-          allocated_green_s_ = (mode == MODE_FIXED_FALLBACK) ? kFixedFallbackGreen : calculateGreenTime(q_ew);
-          ew_wait_time_s_ = 0.0f;
-          switchState(STATE_EW_GREEN);
+          enterGreenPhase(STATE_EW_GREEN, mode, q_ew, ew_wait_time_s_);
         }
         break;
 
-      case STATE_EW_GREEN: {
-        // Gap-Out Policy: Symmetrically requires MODE_ADAPTIVE_FULL
-        bool gap_out = (mode == MODE_ADAPTIVE_FULL) &&
-                       (elapsed_s >= kMinGreen) &&
-                       (q_ew < 0.5f) &&
-                       (q_ns >= 1.0f);
-
-        bool starvation = (ns_wait_time_s_ >= kMaxWaitStarvation) && (q_ns >= 1.0f);
-        bool max_green_expired = (elapsed_s >= allocated_green_s_);
-
-        if (gap_out || starvation || max_green_expired) {
+      case STATE_EW_GREEN:
+        if (shouldTerminateGreen(mode, elapsed_s, q_ew, q_ns, ns_wait_time_s_)) {
           switchState(STATE_EW_YELLOW);
         }
         break;
-      }
 
       case STATE_EW_YELLOW:
         if (elapsed_s >= kYellowTime) {
@@ -326,9 +278,7 @@ class TrafficController {
 
       case STATE_ALL_RED_TO_NS:
         if (elapsed_s >= kAllRedTime) {
-          allocated_green_s_ = (mode == MODE_FIXED_FALLBACK) ? kFixedFallbackGreen : calculateGreenTime(q_ns);
-          ns_wait_time_s_ = 0.0f; // Reset NS wait timer upon granting green
-          switchState(STATE_NS_GREEN);
+          enterGreenPhase(STATE_NS_GREEN, mode, q_ns, ns_wait_time_s_);
         }
         break;
 
@@ -341,50 +291,10 @@ class TrafficController {
 
   // Comprehensive Internal Safety & State-Transition Invariant Monitor
   bool verifyInternalSafety() const {
-    // 1. Assert valid state enumeration
-    if (state_ < STATE_ALL_RED_STARTUP || state_ > STATE_FAILSAFE_FLASH) {
-      return false;
-    }
-
-    // 2. Invariant: Allocated green must be finite and within operational bounds
-    if (!isfinite(allocated_green_s_) || allocated_green_s_ < kMinGreen ||
-        allocated_green_s_ > max(kMaxGreen, kFixedFallbackGreen)) {
-      return false;
-    }
-
-    // 3. Invariant: Wrap-safe clock difference and finite state elapsed duration
-    // In unsigned 32-bit modulo arithmetic, now - state_start_time_ms_ yields true elapsed duration.
-    // An interval > 0x7FFFFFFFUL (~24.8 days) represents an apparent backwards clock jump.
     unsigned long now = getCurrentTimeMs();
     unsigned long state_elapsed_ms = now - state_start_time_ms_;
-    if (state_elapsed_ms > 0x7FFFFFFFUL) {
-      return false; // Backwards clock jump / corrupted timestamp
-    }
     float elapsed_s = state_elapsed_ms / 1000.0f;
-    if (!isfinite(elapsed_s) || elapsed_s < 0.0f) {
-      return false;
-    }
-
-    // 4. Runaway Clearance Guard: Clearance phases must terminate deterministically
-    // If yellow exceeds kYellowTime + 1.0s or all-red exceeds kAllRedTime + 1.0s, FSM has stalled
-    if (state_ == STATE_NS_YELLOW || state_ == STATE_EW_YELLOW) {
-      if (elapsed_s > (kYellowTime + 1.0f)) return false;
-    }
-    if (state_ == STATE_ALL_RED_TO_EW || state_ == STATE_ALL_RED_TO_NS) {
-      if (elapsed_s > (kAllRedTime + 1.0f)) return false;
-    }
-    if (state_ == STATE_ALL_RED_STARTUP) {
-      if (elapsed_s > (kStartupAllRedHold + 1.0f)) return false;
-    }
-
-    // 5. Output Conflict Invariant: State must never imply concurrent conflicting active phases
-    bool ns_active = (state_ == STATE_NS_GREEN || state_ == STATE_NS_YELLOW);
-    bool ew_active = (state_ == STATE_EW_GREEN || state_ == STATE_EW_YELLOW);
-    if (ns_active && ew_active) {
-      return false; // Asserts physical non-conflict invariant on internal state
-    }
-
-    return true;
+    return verifyInternalSafety(state_elapsed_ms, elapsed_s);
   }
 
   // Safety Invariant: Conflicting corridors can NEVER both be green/yellow
@@ -472,19 +382,111 @@ class TrafficController {
     app.is_valid = false;
   }
 
-  ApproachState* getApproachPtr(char leg) {
-    if (leg == 'N') return &north_;
-    if (leg == 'S') return &south_;
-    if (leg == 'E') return &east_;
-    if (leg == 'W') return &west_;
+  static ControllerMode classifyMode(PhaseObservationStatus ns_status,
+                                     PhaseObservationStatus ew_status) {
+    if (ns_status == PHASE_FULLY_MEASURED && ew_status == PHASE_FULLY_MEASURED) {
+      return MODE_ADAPTIVE_FULL;
+    } else if (ns_status == PHASE_UNOBSERVED && ew_status == PHASE_UNOBSERVED) {
+      return MODE_FIXED_FALLBACK;
+    } else {
+      return MODE_DEGRADED_PARTIAL;
+    }
+  }
+
+  static void updateCorridorWaitTime(bool is_serviced_green, float corridor_pcu,
+                                     float dt_s, float &wait_time_s) {
+    if (!is_serviced_green) {
+      if (corridor_pcu >= kMinOpposingDemandPCU) {
+        wait_time_s += dt_s;
+      } else {
+        wait_time_s = 0.0f;
+      }
+    } else {
+      wait_time_s = 0.0f;
+    }
+  }
+
+  bool shouldTerminateGreen(ControllerMode mode, float elapsed_s, float active_pcu,
+                            float opposing_pcu, float opposing_wait_s) const {
+    // Gap-Out Policy: Strictly requires MODE_ADAPTIVE_FULL (both corridors FULLY MEASURED)
+    // Partially measured or fallback demand is strictly barred from truncating active green
+    bool gap_out = (mode == MODE_ADAPTIVE_FULL) &&
+                   (elapsed_s >= kMinGreen) &&
+                   (active_pcu < kGapOutActiveThresholdPCU) &&
+                   (opposing_pcu >= kMinOpposingDemandPCU);
+
+    // Anti-Starvation Protection (continuous unserviced wait ceiling)
+    bool starvation = (opposing_wait_s >= kMaxWaitStarvation) && (opposing_pcu >= kMinOpposingDemandPCU);
+    bool max_green_expired = (elapsed_s >= allocated_green_s_);
+
+    return gap_out || starvation || max_green_expired;
+  }
+
+  void enterGreenPhase(SignalState green_state, ControllerMode mode,
+                       float phase_pcu, float &wait_time_s) {
+    allocated_green_s_ = (mode == MODE_FIXED_FALLBACK) ? kFixedFallbackGreen : calculateGreenTime(phase_pcu);
+    wait_time_s = 0.0f;
+    switchState(green_state);
+  }
+
+  bool verifyInternalSafety(unsigned long state_elapsed_ms, float elapsed_s) const {
+    // 1. Assert valid state enumeration
+    if (state_ < STATE_ALL_RED_STARTUP || state_ > STATE_FAILSAFE_FLASH) {
+      return false;
+    }
+
+    // 2. Invariant: Allocated green must be finite and within operational bounds
+    if (!isfinite(allocated_green_s_) || allocated_green_s_ < kMinGreen ||
+        allocated_green_s_ > max(+kMaxGreen, +kFixedFallbackGreen)) {
+      return false;
+    }
+
+    // 3. Invariant: Wrap-safe clock difference and finite state elapsed duration
+    // In unsigned 32-bit modulo arithmetic, now - state_start_time_ms_ yields true elapsed duration.
+    // An interval > 0x7FFFFFFFUL (~24.8 days) represents an apparent backwards clock jump.
+    if (state_elapsed_ms > kMaxValidElapsedMs) {
+      return false; // Backwards clock jump / corrupted timestamp
+    }
+    if (!isfinite(elapsed_s) || elapsed_s < 0.0f) {
+      return false;
+    }
+
+    // 4. Runaway Clearance Guard: Clearance phases must terminate deterministically
+    // If yellow exceeds kYellowTime + 1.0s or all-red exceeds kAllRedTime + 1.0s, FSM has stalled
+    if (state_ == STATE_NS_YELLOW || state_ == STATE_EW_YELLOW) {
+      if (elapsed_s > (kYellowTime + kClearanceRunawayMarginS)) return false;
+    }
+    if (state_ == STATE_ALL_RED_TO_EW || state_ == STATE_ALL_RED_TO_NS) {
+      if (elapsed_s > (kAllRedTime + kClearanceRunawayMarginS)) return false;
+    }
+    if (state_ == STATE_ALL_RED_STARTUP) {
+      if (elapsed_s > (kStartupAllRedHold + kClearanceRunawayMarginS)) return false;
+    }
+
+    // 5. Output Conflict Invariant: State must never imply concurrent conflicting active phases
+    bool ns_active = (state_ == STATE_NS_GREEN || state_ == STATE_NS_YELLOW);
+    bool ew_active = (state_ == STATE_EW_GREEN || state_ == STATE_EW_YELLOW);
+    if (ns_active && ew_active) {
+      return false; // Asserts physical non-conflict invariant on internal state
+    }
+
+    return true;
+  }
+
+  template <typename Self>
+  static auto resolveApproachPtr(Self &self, char leg) -> decltype(&self.north_) {
+    if (leg == 'N') return &self.north_;
+    if (leg == 'S') return &self.south_;
+    if (leg == 'E') return &self.east_;
+    if (leg == 'W') return &self.west_;
     return nullptr;
   }
 
+  ApproachState* getApproachPtr(char leg) {
+    return resolveApproachPtr(*this, leg);
+  }
+
   const ApproachState* getApproachPtrConst(char leg) const {
-    if (leg == 'N') return &north_;
-    if (leg == 'S') return &south_;
-    if (leg == 'E') return &east_;
-    if (leg == 'W') return &west_;
-    return nullptr;
+    return resolveApproachPtr(*this, leg);
   }
 };

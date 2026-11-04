@@ -815,6 +815,218 @@ void testExhaustiveTelemetryParserMalformedInputs() {
   std::cout << "  [PASS] Malformed boolean token strictly rejected." << std::endl;
 }
 
+void testStage6SafetyAndSchedulingEdgeCases() {
+  std::cout << "\n--- C++ Test 17: Extended Safety Guards, Accessors & Starvation Termination ---" << std::endl;
+
+  // 1. Runaway All-Red Clearance (STATE_ALL_RED_TO_EW and STATE_ALL_RED_TO_NS > 2.5s)
+  {
+    TrafficController ctrl;
+    ctrl.setMockTimeMs(0);
+    ctrl.tick();
+    ctrl.setMockTimeMs(2100);
+    ctrl.tick();
+    ctrl.switchState(STATE_NS_YELLOW);
+    ctrl.setMockTimeMs(5100);
+    ctrl.tick();
+    assert(ctrl.getState() == STATE_ALL_RED_TO_EW);
+
+    // kAllRedTime = 1.5s, runaway limit = 2.5s. Advance by 2600ms (t = 7700)
+    ctrl.setMockTimeMs(7700);
+    ctrl.tick();
+    assert(ctrl.getState() == STATE_FAILSAFE_FLASH);
+    std::cout << "  [PASS] Runaway all-red clearance (> 2.5s) tripped internal safety into FAILSAFE_FLASH." << std::endl;
+  }
+
+  // 2. Runaway Startup Hold (STATE_ALL_RED_STARTUP > 3.0s)
+  {
+    TrafficController ctrl;
+    ctrl.setMockTimeMs(0);
+    ctrl.tick();
+    assert(ctrl.getState() == STATE_ALL_RED_STARTUP);
+
+    // kStartupAllRedHold = 2.0s, runaway limit = 3.0s. Advance directly to 3100ms
+    ctrl.setMockTimeMs(3100);
+    ctrl.tick();
+    assert(ctrl.getState() == STATE_FAILSAFE_FLASH);
+    std::cout << "  [PASS] Runaway startup all-red hold (> 3.0s) tripped internal safety into FAILSAFE_FLASH." << std::endl;
+  }
+
+  // 3. Backwards Clock Jump (state_elapsed_ms > 0x7FFFFFFFUL)
+  {
+    TrafficController ctrl;
+    ctrl.setMockTimeMs(5000);
+    ctrl.setSimulatedStateStartTimeMs(5000);
+    ctrl.tick();
+    assert(ctrl.getState() == STATE_ALL_RED_STARTUP);
+
+    // Jump clock backwards to 4000ms (unsigned diff wraps to > 0x7FFFFFFFUL)
+    ctrl.setMockTimeMs(4000);
+    assert(ctrl.verifyInternalSafety() == false);
+    ctrl.tick();
+    assert(ctrl.getState() == STATE_FAILSAFE_FLASH);
+    std::cout << "  [PASS] Backwards clock jump detected and latched into FAILSAFE_FLASH." << std::endl;
+  }
+
+  // 4. Waiting-time reset when opposing demand drops below 1.0 PCU
+  {
+    TrafficController ctrl;
+    ctrl.setMockTimeMs(0);
+    ctrl.updateApproach('N', 10, 40.0f, 10.0f, true);
+    ctrl.updateApproach('S', 10, 40.0f, 10.0f, true);
+    ctrl.updateApproach('E', 3, 15.0f, 3.0f, true);
+    ctrl.updateApproach('W', 3, 15.0f, 3.0f, true);
+    ctrl.tick();
+
+    ctrl.setMockTimeMs(2100);
+    ctrl.tick();
+    assert(ctrl.getState() == STATE_NS_GREEN);
+
+    ctrl.setMockTimeMs(4100);
+    ctrl.tick();
+    assert(ctrl.getEwWaitTime() > 1.9f);
+
+    // EW demand dissipates below 1.0 PCU (0.4 + 0.4 = 0.8 PCU < 1.0 PCU) while still in NS_GREEN
+    ctrl.setMockTimeMs(5100);
+    ctrl.updateApproach('E', 0, 0.0f, 0.4f, true);
+    ctrl.updateApproach('W', 0, 0.0f, 0.4f, true);
+    ctrl.tick();
+    assert(ctrl.getEwWaitTime() == 0.0f);
+    std::cout << "  [PASS] Opposing wait timer reset to 0.0s when opposing demand dropped below 1.0 PCU." << std::endl;
+  }
+
+  // 5. Tick interval exceeding 10,000 ms (kMaxTickGapMs guard)
+  {
+    TrafficController ctrl;
+    ctrl.setMockTimeMs(100);
+    ctrl.setSimulatedStateStartTimeMs(100);
+    ctrl.updateApproach('N', 15, 50.0f, 15.0f, true);
+    ctrl.updateApproach('S', 15, 50.0f, 15.0f, true);
+    ctrl.updateApproach('E', 5, 20.0f, 5.0f, true);
+    ctrl.updateApproach('W', 5, 20.0f, 5.0f, true);
+    ctrl.tick();
+
+    ctrl.setMockTimeMs(2200);
+    ctrl.tick();
+    assert(ctrl.getState() == STATE_NS_GREEN);
+    float wait_before = ctrl.getEwWaitTime();
+
+    // Advance by 10,001 ms in a single tick (> kMaxTickGapMs = 10000) -> dt_s must clamp to 0.0s
+    ctrl.setMockTimeMs(12201);
+    ctrl.tick();
+    assert(std::fabs(ctrl.getEwWaitTime() - wait_before) < 0.001f);
+    std::cout << "  [PASS] Anomalous tick interval (> 10,000 ms) safely suppressed wait-time spike." << std::endl;
+  }
+
+  // 6. getRemainingTime() and getStateName() across all 8 states
+  {
+    TrafficController ctrl;
+    ctrl.setMockTimeMs(0);
+    assert(std::strcmp(ctrl.getStateName(), "STARTUP_ALL_RED") == 0);
+    assert(std::fabs(ctrl.getRemainingTime() - 2.0f) < 0.01f);
+
+    ctrl.setMockTimeMs(2100);
+    ctrl.tick();
+    assert(std::strcmp(ctrl.getStateName(), "NS_GREEN") == 0);
+    assert(std::fabs(ctrl.getRemainingTime() - 25.0f) < 0.01f);
+
+    ctrl.setMockTimeMs(27100);
+    ctrl.tick();
+    assert(std::strcmp(ctrl.getStateName(), "NS_YELLOW") == 0);
+    assert(std::fabs(ctrl.getRemainingTime() - 3.0f) < 0.01f);
+
+    ctrl.setMockTimeMs(30100);
+    ctrl.tick();
+    assert(std::strcmp(ctrl.getStateName(), "ALL_RED_TO_EW") == 0);
+    assert(std::fabs(ctrl.getRemainingTime() - 1.5f) < 0.01f);
+
+    ctrl.setMockTimeMs(31600);
+    ctrl.tick();
+    assert(std::strcmp(ctrl.getStateName(), "EW_GREEN") == 0);
+    assert(std::fabs(ctrl.getRemainingTime() - 25.0f) < 0.01f);
+
+    ctrl.setMockTimeMs(56600);
+    ctrl.tick();
+    assert(std::strcmp(ctrl.getStateName(), "EW_YELLOW") == 0);
+    assert(std::fabs(ctrl.getRemainingTime() - 3.0f) < 0.01f);
+
+    ctrl.setMockTimeMs(59600);
+    ctrl.tick();
+    assert(std::strcmp(ctrl.getStateName(), "ALL_RED_TO_NS") == 0);
+    assert(std::fabs(ctrl.getRemainingTime() - 1.5f) < 0.01f);
+
+    ctrl.switchState(STATE_FAILSAFE_FLASH);
+    assert(std::strcmp(ctrl.getStateName(), "FAILSAFE_FLASH") == 0);
+    assert(ctrl.getRemainingTime() == 0.0f);
+    std::cout << "  [PASS] getRemainingTime() and getStateName() verified across all 8 FSM states." << std::endl;
+  }
+
+  // 7. Starvation termination branch (opposing_wait_s >= 50.0s before allocated_green_s_ expires)
+  {
+    TrafficController ctrl;
+    // Start in ALL_RED_STARTUP with heavy EW demand so EW wait accumulates during startup (2.0s),
+    // NS Green, NS Yellow (3.0s), and All-Red (1.5s) -> NS wait accumulates during NS_YELLOW (3.5s) + ALL_RED_TO_EW (2.0s) = 5.5s
+    ctrl.setMockTimeMs(100);
+    ctrl.setSimulatedStateStartTimeMs(100);
+    ctrl.updateApproach('N', 2, 10.0f, 2.0f, true);
+    ctrl.updateApproach('S', 2, 10.0f, 2.0f, true);
+    ctrl.updateApproach('E', 25, 80.0f, 25.0f, true);
+    ctrl.updateApproach('W', 25, 80.0f, 25.0f, true);
+    ctrl.tick();
+
+    // Exit startup at t = 2100 -> enters NS_GREEN (allocated 10.0s)
+    ctrl.setMockTimeMs(2100);
+    ctrl.tick();
+    assert(ctrl.getState() == STATE_NS_GREEN);
+
+    // Exit NS_GREEN at t = 12100 -> enters NS_YELLOW
+    ctrl.setMockTimeMs(12100);
+    ctrl.updateApproach('N', 10, 40.0f, 10.0f, true);
+    ctrl.updateApproach('S', 10, 40.0f, 10.0f, true);
+    ctrl.tick();
+    assert(ctrl.getState() == STATE_NS_YELLOW);
+
+    // Step 3.5s in NS_YELLOW (within 4.0s safety limit) -> t = 15600, enters ALL_RED_TO_EW (ns_wait = 3.5s)
+    ctrl.setMockTimeMs(15600);
+    ctrl.updateApproach('N', 10, 40.0f, 10.0f, true);
+    ctrl.updateApproach('S', 10, 40.0f, 10.0f, true);
+    ctrl.updateApproach('E', 25, 80.0f, 25.0f, true);
+    ctrl.updateApproach('W', 25, 80.0f, 25.0f, true);
+    ctrl.tick();
+    assert(ctrl.getState() == STATE_ALL_RED_TO_EW);
+
+    // Step 2.0s in ALL_RED_TO_EW (within 2.5s safety limit) -> t = 17600, enters EW_GREEN (allocated 45.0s, ns_wait = 5.5s)
+    ctrl.setMockTimeMs(17600);
+    ctrl.tick();
+    assert(ctrl.getState() == STATE_EW_GREEN);
+    assert(ctrl.getAllocatedGreen() == 45.0f);
+    assert(std::fabs(ctrl.getNsWaitTime() - 5.5f) < 0.01f);
+
+    // Step 44.5s into EW_GREEN (elapsed_s = 44.5s < allocated_green_s_ = 45.0s, so max_green_expired == false,
+    // and EW has 50.0 PCU so gap_out == false, while ns_wait = 5.5s + 44.5s = 50.0s >= kMaxWaitStarvation)
+    unsigned long t = 17600;
+    for (int i = 0; i < 44; ++i) {
+      t += 1000;
+      ctrl.setMockTimeMs(t);
+      ctrl.updateApproach('N', 10, 40.0f, 10.0f, true);
+      ctrl.updateApproach('S', 10, 40.0f, 10.0f, true);
+      ctrl.updateApproach('E', 25, 80.0f, 25.0f, true);
+      ctrl.updateApproach('W', 25, 80.0f, 25.0f, true);
+      ctrl.tick();
+      assert(ctrl.getState() == STATE_EW_GREEN);
+    }
+    // Final +500ms step reaches elapsed = 44.5s (< 45.0s max green) and ns_wait = 50.0s -> starvation triggers EW_YELLOW!
+    t += 500;
+    ctrl.setMockTimeMs(t);
+    ctrl.updateApproach('N', 10, 40.0f, 10.0f, true);
+    ctrl.updateApproach('S', 10, 40.0f, 10.0f, true);
+    ctrl.updateApproach('E', 25, 80.0f, 25.0f, true);
+    ctrl.updateApproach('W', 25, 80.0f, 25.0f, true);
+    ctrl.tick();
+    assert(ctrl.getState() == STATE_EW_YELLOW);
+    std::cout << "  [PASS] Starvation ceiling (50.0s) terminated active green at 44.5s prior to 45.0s max-green expiration." << std::endl;
+  }
+}
+
 int main() {
   std::cout << "=================================================================" << std::endl;
   std::cout << "  TrafficController C++ Native Verification Test Suite (v3.6)" << std::endl;
@@ -836,9 +1048,10 @@ int main() {
   testSensorRecoveryFromFixedFallback();
   testDegradedModeDemandAndStarvationWatchdog();
   testExhaustiveTelemetryParserMalformedInputs();
+  testStage6SafetyAndSchedulingEdgeCases();
 
   std::cout << "\n=================================================================" << std::endl;
-  std::cout << "  ALL 16 C++ EMBEDDED CONTROLLER VERIFICATION TESTS PASSED (0 ERRORS)." << std::endl;
+  std::cout << "  ALL 17 C++ EMBEDDED CONTROLLER VERIFICATION TESTS PASSED (0 ERRORS)." << std::endl;
   std::cout << "=================================================================" << std::endl;
   return 0;
 }
