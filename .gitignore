@@ -5,7 +5,7 @@ compile_commands.json
 .DS_Store
 *.swp
 *~
-test/test_native_controller
+test/test_traffic_controller
 test/benchmark_runtime_profile
 test/stress_test_native
 venv/

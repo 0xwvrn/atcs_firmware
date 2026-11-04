@@ -289,7 +289,7 @@ void testTelemetryParserEdgeCases() {
   std::cout << "\n--- C++ Test 8: TelemetryParser Structural & Syntax Robustness ---" << std::endl;
   ParsedTelemetry pkt;
 
-  // Case A: Valid realistic telemetry packet from traffic_perception.py (formerly bridge_controller.py)
+  // Case A: Valid realistic telemetry packet from vision/perception/pipeline.py
   const char* valid_json = "{\"seq\": 3, \"approach\": \"N\", \"valid\": true, \"Q\": 3, \"PCU\": 4.5, \"D_tail_m\": 41.21, \"timestamp_ms\": 1793298091336}";
   bool res = TelemetryParser::parse(valid_json, strlen(valid_json), pkt);
   assert(res == true);
