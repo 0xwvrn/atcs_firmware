@@ -14,12 +14,15 @@ using std::isfinite;
 
 // Structured telemetry packet container
 struct ParsedTelemetry {
-  char approach;     // 'N', 'S', 'E', 'W'
-  int q_count;       // Valid vehicle queue count (>= 0)
-  float d_tail_m;    // Distance to queue tail in meters (>= 0.0)
-  float p_pcu;       // Passenger Car Unit demand (>= 0.0)
-  float inflow_pcu;  // Approaching inflow PCU demand (>= 0.0)
-  bool is_valid;     // Strict pipeline calibration and sanity gate
+  char approach;        // 'N', 'S', 'E', 'W'
+  int q_count;          // Valid vehicle queue count (>= 0)
+  float d_tail_m;       // Distance to queue tail in meters (>= 0.0)
+  float p_pcu;          // Passenger Car Unit demand (>= 0.0)
+  float inflow_pcu;     // Approaching inflow PCU demand (>= 0.0)
+  bool is_valid;        // Strict pipeline calibration and sanity gate
+  int8_t profile_cmd;   // -1: unchanged, 0: BASELINE_45S, 1: URBAN_ARTERIAL, 2: HEAVY_METRO
+  int8_t topology_cmd;  // -1: unchanged, 0: STANDARD_4WAY, 1: T_3WAY_NS_E, 2: T_3WAY_EW_N, 3: DOUBLE_CYCLE
+  int8_t moderato_cmd;  // -1: unchanged, 0: disable, 1: enable
 };
 
 // Zero-allocation, strict length-bounded JSON telemetry validator & parser for ATCS
@@ -134,12 +137,32 @@ class TelemetryParser {
       if (!parseFloat(k_in, end, buf, inflow_val)) return false;
     }
 
+    // 9. Optional runtime configuration commands ("profile", "topology", "moderato")
+    int8_t profile_cmd = -1;
+    const char* k_prof = findKey(buf, start, end, "profile");
+    if (k_prof && !parseProfileCmd(k_prof, end, buf, profile_cmd)) return false;
+
+    int8_t topology_cmd = -1;
+    const char* k_topo = findKey(buf, start, end, "topology");
+    if (k_topo && !parseTopologyCmd(k_topo, end, buf, topology_cmd)) return false;
+
+    int8_t moderato_cmd = -1;
+    const char* k_mod = findKey(buf, start, end, "moderato");
+    if (k_mod) {
+      bool mod_val = false;
+      if (!parseBool(k_mod, end, buf, mod_val)) return false;
+      moderato_cmd = mod_val ? 1 : 0;
+    }
+
     out.approach = leg;
     out.q_count = q_val;
     out.d_tail_m = d_tail;
     out.p_pcu = pcu_val;
     out.inflow_pcu = inflow_val;
     out.is_valid = valid;
+    out.profile_cmd = profile_cmd;
+    out.topology_cmd = topology_cmd;
+    out.moderato_cmd = moderato_cmd;
     return true;
   }
 
@@ -246,5 +269,42 @@ class TelemetryParser {
     if (!isfinite(val) || val < 0.0f || val > 2000.0f) return false;
     float_out = val;
     return true;
+  }
+
+  static bool parseStringToken(const char* key_ptr, size_t end, const char* buf, char* out_tok, size_t max_len) {
+    const char* colon = strchr(key_ptr, ':');
+    if (!colon || colon > buf + end) return false;
+    colon++;
+    while (colon <= buf + end && isspace((unsigned char)*colon)) colon++;
+    if (colon > buf + end || *colon != '\"') return false;
+    colon++;
+    const char* close_q = strchr(colon, '\"');
+    if (!close_q || close_q > buf + end) return false;
+    size_t tok_len = (size_t)(close_q - colon);
+    if (tok_len == 0 || tok_len >= max_len) return false;
+    memcpy(out_tok, colon, tok_len);
+    out_tok[tok_len] = '\0';
+    const char* after = close_q + 1;
+    while (after <= buf + end && isspace((unsigned char)*after)) after++;
+    return (after > buf + end || isLegalValueDelimiter(*after));
+  }
+
+  static bool parseProfileCmd(const char* key_ptr, size_t end, const char* buf, int8_t &cmd_out) {
+    char tok[32];
+    if (!parseStringToken(key_ptr, end, buf, tok, sizeof(tok))) return false;
+    if (strcmp(tok, "BASELINE_45S") == 0 || strcmp(tok, "BASELINE") == 0) { cmd_out = 0; return true; }
+    if (strcmp(tok, "URBAN_ARTERIAL") == 0) { cmd_out = 1; return true; }
+    if (strcmp(tok, "HEAVY_METRO") == 0) { cmd_out = 2; return true; }
+    return false;
+  }
+
+  static bool parseTopologyCmd(const char* key_ptr, size_t end, const char* buf, int8_t &cmd_out) {
+    char tok[32];
+    if (!parseStringToken(key_ptr, end, buf, tok, sizeof(tok))) return false;
+    if (strcmp(tok, "STANDARD_4WAY") == 0) { cmd_out = 0; return true; }
+    if (strcmp(tok, "T_JUNCTION_3WAY_NS_E") == 0) { cmd_out = 1; return true; }
+    if (strcmp(tok, "T_JUNCTION_3WAY_EW_N") == 0) { cmd_out = 2; return true; }
+    if (strcmp(tok, "DOUBLE_CYCLE_NS_E_NS_W") == 0) { cmd_out = 3; return true; }
+    return false;
   }
 };

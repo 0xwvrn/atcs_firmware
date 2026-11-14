@@ -22,6 +22,8 @@ void setup() {
   Serial.begin(BoardConfig::UART_BAUD_RATE);
   delay(1500);
 
+  controller.applyTimingProfile(PROFILE_URBAN_ARTERIAL);
+  controller.setModeratoEnabled(true, 10.0f);
   signal_outputs.setupPins();
 }
 
@@ -34,6 +36,15 @@ void loop() {
   telemetry_receiver.process(
       Serial,
       [](const ParsedTelemetry &pkt) {
+        if (pkt.profile_cmd >= 0) {
+          controller.applyTimingProfile(static_cast<IRC93TimingProfile>(pkt.profile_cmd));
+        }
+        if (pkt.topology_cmd >= 0) {
+          controller.setTopology(static_cast<IntersectionTopology>(pkt.topology_cmd));
+        }
+        if (pkt.moderato_cmd >= 0) {
+          controller.setModeratoEnabled(pkt.moderato_cmd == 1, 10.0f);
+        }
         controller.updateApproach(pkt.approach, pkt.q_count, pkt.d_tail_m,
                                   pkt.p_pcu, pkt.is_valid, pkt.inflow_pcu);
         last_queue_rx_ms = millis();
@@ -63,10 +74,11 @@ void loop() {
     ApproachState e = controller.getApproachState('E');
     ApproachState w = controller.getApproachState('W');
 
-    Serial.printf("{\"state\":\"%s\",\"rem\":%.1f,\"alloc\":%.1f,\"Q\":[%d,%d,%"
-                  "d,%d],\"PCU\":[%.1f,%.1f,%.1f,%.1f]}\n",
+    Serial.printf("{\"state\":\"%s\",\"rem\":%.1f,\"alloc\":%.1f,\"regime\":\"%s\","
+                  "\"profile\":\"%s\",\"Q\":[%d,%d,%d,%d],\"PCU\":[%.1f,%.1f,%.1f,%.1f]}\n",
                   controller.getStateName(), controller.getRemainingTime(),
-                  controller.getAllocatedGreen(), n.q_count, s.q_count,
+                  controller.getAllocatedGreen(), controller.getRegimeName(),
+                  controller.getProfileName(), n.q_count, s.q_count,
                   e.q_count, w.q_count, n.p_pcu, s.p_pcu, e.p_pcu, w.p_pcu);
 
     profiler.recordDiagTx(esp_timer_get_time() - t_diag_start);

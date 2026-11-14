@@ -1030,11 +1030,14 @@ void testStage6SafetyAndSchedulingEdgeCases() {
 void testModeratoTopologiesAndIRC93Profiles() {
   std::cout << "\n# C++ Test 18: MODERATO Regimes, 3-Way Topology & IRC:93 Timing Profiles" << std::endl;
 
-  // 1. TelemetryParser inflow_pcu parsing
+  // 1. TelemetryParser inflow_pcu and runtime config command parsing
   ParsedTelemetry pkt;
-  const char* json_inflow = "{\"approach\":\"N\",\"Q\":9,\"PCU\":9.0,\"D_tail_m\":28.0,\"inflow_pcu\":3.5,\"valid\":true}";
+  const char* json_inflow = "{\"approach\":\"N\",\"Q\":9,\"PCU\":9.0,\"D_tail_m\":28.0,\"inflow_pcu\":3.5,\"valid\":true,\"profile\":\"HEAVY_METRO\",\"topology\":\"T_JUNCTION_3WAY_NS_E\",\"moderato\":true}";
   assert(TelemetryParser::parse(json_inflow, strlen(json_inflow), pkt));
   assert(std::fabs(pkt.inflow_pcu - 3.5f) < 0.01f);
+  assert(pkt.profile_cmd == 2);
+  assert(pkt.topology_cmd == 1);
+  assert(pkt.moderato_cmd == 1);
 
   // 2. MODERATO CONGESTION_CONTROL (queue + inflow) & step-down cap
   TrafficController mod_ctrl;

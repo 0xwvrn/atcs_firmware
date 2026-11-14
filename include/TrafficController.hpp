@@ -170,7 +170,26 @@ class TrafficController {
     enable_moderato_ = enabled;
     moderato_max_step_down_s_ = max_step_down_s;
   }
+  bool isModeratoEnabled() const { return enable_moderato_; }
   ModeratoRegime getActiveRegime() const { return active_regime_; }
+
+  const char* getRegimeName() const {
+    if (!enable_moderato_) return "STANDARD_ATCS";
+    switch (active_regime_) {
+      case REGIME_DELAY_MINIMUM:      return "DELAY_MINIMUM";
+      case REGIME_CONGESTION_CONTROL: return "CONGESTION_CONTROL";
+      case REGIME_BALANCED_CONTROL:   return "BALANCED_CONTROL";
+      default:                        return "UNKNOWN";
+    }
+  }
+
+  const char* getProfileName() const {
+    switch (active_profile_) {
+      case PROFILE_URBAN_ARTERIAL: return "URBAN_ARTERIAL";
+      case PROFILE_HEAVY_METRO:    return "HEAVY_METRO";
+      default:                     return "BASELINE_45S";
+    }
+  }
 
   // Set explicit simulated clock for native unit test harnesses
   void setMockTimeMs(unsigned long mock_time_ms) {
