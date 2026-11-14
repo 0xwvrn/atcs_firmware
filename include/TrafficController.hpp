@@ -43,11 +43,34 @@ enum ControllerMode {
   MODE_FIXED_FALLBACK        // Complete sensor blackout: predefined fixed-time cycle, zero adaptive decisions
 };
 
+// MODERATO congestion control regimes (Hayashi & Sugimoto, IEEE 1999)
+enum ModeratoRegime {
+  REGIME_DELAY_MINIMUM,      // Under-saturated (L_total < 0.50): queue-only short cycle
+  REGIME_CONGESTION_CONTROL, // Near-saturated (0.50 <= L_total <= 1.00): queue + inflow + step-down cap
+  REGIME_BALANCED_CONTROL    // Over-saturated (L_total > 1.00): balanced saturation & waiting time split
+};
+
+// IRC:93-1985 / Indo-HCM (2017) selectable timing profiles
+enum IRC93TimingProfile {
+  PROFILE_BASELINE_45S,      // 10-45s green, 3.0s yellow, 1.5s all-red, 50s starvation, 25s fallback
+  PROFILE_URBAN_ARTERIAL,    // 10-60s green, 3.0s yellow, 1.5s all-red, 65s starvation, 30s fallback
+  PROFILE_HEAVY_METRO        // 15-75s green, 4.0s yellow, 2.0s all-red, 82s starvation, 35s fallback
+};
+
+// 2-Phase & Multi-Stage intersection topologies without unsafe phase skipping
+enum IntersectionTopology {
+  TOPOLOGY_STANDARD_4WAY,          // Phase 0: (N, S), Phase 1: (E, W)
+  TOPOLOGY_T_JUNCTION_3WAY_NS_E,   // Phase 0: (N, S), Phase 1: (E only)
+  TOPOLOGY_T_JUNCTION_3WAY_EW_N,   // Phase 0: (N only), Phase 1: (E, W)
+  TOPOLOGY_DOUBLE_CYCLE_NS_E_NS_W  // Double-Cycling Ring: Stage 0 (N,S) -> Stage 1 (E) -> Stage 2 (N,S) -> Stage 3 (W)
+};
+
 // Physical state variables for a single approach leg
 struct ApproachState {
   int q_count;             // Count of stopped vehicles in queue
   float d_tail_m;          // Distance to queue tail in meters
   float p_pcu;             // Total Passenger Car Unit demand
+  float inflow_pcu;        // Approaching upstream/moving inflow PCU
   unsigned long last_seen; // Timestamp (ms) of last valid observation
   bool is_valid;           // True if sensor is reporting valid, calibrated data
 };
@@ -81,9 +104,21 @@ class TrafficController {
     use_mock_time_ = false;
     last_tick_time_ms_ = 0;
 
+    applyTimingProfile(PROFILE_BASELINE_45S);
+    topology_ = TOPOLOGY_STANDARD_4WAY;
+    stage_idx_ = 0;
+    max_stage_skips_ = 1;
+    ew_substage_skips_[0] = 0;
+    ew_substage_skips_[1] = 0;
+    enable_moderato_ = false;
+    moderato_max_step_down_s_ = 10.0f;
+    active_regime_ = REGIME_DELAY_MINIMUM;
+    prev_phase_green_s_[0] = -1.0f;
+    prev_phase_green_s_[1] = -1.0f;
+
     state_ = STATE_ALL_RED_STARTUP;
     state_start_time_ms_ = getCurrentTimeMs();
-    allocated_green_s_ = kMinGreen;
+    allocated_green_s_ = min_green_s_;
 
     ns_wait_time_s_ = 0.0f;
     ew_wait_time_s_ = 0.0f;
@@ -93,6 +128,49 @@ class TrafficController {
     initApproach(east_);
     initApproach(west_);
   }
+
+  void applyTimingProfile(IRC93TimingProfile profile) {
+    active_profile_ = profile;
+    if (profile == PROFILE_URBAN_ARTERIAL) {
+      min_green_s_ = 10.0f;
+      max_green_s_ = 60.0f;
+      yellow_time_s_ = 3.0f;
+      all_red_time_s_ = 1.5f;
+      max_wait_starvation_s_ = 65.0f;
+      fixed_fallback_green_s_ = 30.0f;
+    } else if (profile == PROFILE_HEAVY_METRO) {
+      min_green_s_ = 15.0f;
+      max_green_s_ = 75.0f;
+      yellow_time_s_ = 4.0f;
+      all_red_time_s_ = 2.0f;
+      max_wait_starvation_s_ = 82.0f;
+      fixed_fallback_green_s_ = 35.0f;
+    } else {
+      min_green_s_ = kMinGreen;
+      max_green_s_ = kMaxGreen;
+      yellow_time_s_ = kYellowTime;
+      all_red_time_s_ = kAllRedTime;
+      max_wait_starvation_s_ = kMaxWaitStarvation;
+      fixed_fallback_green_s_ = kFixedFallbackGreen;
+    }
+  }
+
+  void setTopology(IntersectionTopology topology, int max_stage_skips = 1) {
+    topology_ = topology;
+    max_stage_skips_ = (max_stage_skips >= 0) ? max_stage_skips : 0;
+    stage_idx_ = 0;
+    ew_substage_skips_[0] = 0;
+    ew_substage_skips_[1] = 0;
+  }
+  IntersectionTopology getTopology() const { return topology_; }
+  int getActiveStageIndex() const { return stage_idx_; }
+  IRC93TimingProfile getTimingProfile() const { return active_profile_; }
+
+  void setModeratoEnabled(bool enabled, float max_step_down_s = 10.0f) {
+    enable_moderato_ = enabled;
+    moderato_max_step_down_s_ = max_step_down_s;
+  }
+  ModeratoRegime getActiveRegime() const { return active_regime_; }
 
   // Set explicit simulated clock for native unit test harnesses
   void setMockTimeMs(unsigned long mock_time_ms) {
@@ -116,12 +194,13 @@ class TrafficController {
   }
 
   // Update observation for a specific monitored approach with strict input validation
-  bool updateApproach(char leg, int q, float d_tail, float pcu, bool valid = true) {
+  bool updateApproach(char leg, int q, float d_tail, float pcu, bool valid = true, float inflow_pcu = 0.0f) {
     ApproachState *app = getApproachPtr(leg);
     if (!app) return false;
 
     // Strict input validation: reject negative, non-finite (NaN/Inf), or malformed telemetry
-    if (!valid || q < 0 || !isfinite(d_tail) || d_tail < 0.0f || !isfinite(pcu) || pcu < 0.0f) {
+    if (!valid || q < 0 || !isfinite(d_tail) || d_tail < 0.0f ||
+        !isfinite(pcu) || pcu < 0.0f || !isfinite(inflow_pcu) || inflow_pcu < 0.0f) {
       app->is_valid = false;
       return false;
     }
@@ -129,6 +208,7 @@ class TrafficController {
     app->q_count = q;
     app->d_tail_m = d_tail;
     app->p_pcu = pcu; // Strictly preserve exact 0.0 PCU when valid (no false conversion to count)
+    app->inflow_pcu = inflow_pcu;
     app->last_seen = getCurrentTimeMs();
     app->is_valid = true;
     return true;
@@ -142,8 +222,33 @@ class TrafficController {
     return (age_ms <= kSensorTimeoutMs);
   }
 
-  // Evaluates phase observation status and combined demand (N+S or E+W)
+  float getApproachInflow(char leg, unsigned long now) const {
+    if (!hasFreshObservation(leg, now)) return 0.0f;
+    const ApproachState *app = getApproachPtrConst(leg);
+    return app ? app->inflow_pcu : 0.0f;
+  }
+
+  // Evaluates phase observation status and combined demand (N+S or E+W, respecting 3-way topology)
   float getPhaseDemand(char leg1, char leg2, unsigned long now, PhaseObservationStatus &status) const {
+    bool is_ns = (leg1 == 'N' || leg2 == 'N');
+    if (is_ns && topology_ == TOPOLOGY_T_JUNCTION_3WAY_EW_N) {
+      bool fresh = hasFreshObservation('N', now);
+      status = fresh ? PHASE_FULLY_MEASURED : PHASE_UNOBSERVED;
+      return fresh ? north_.p_pcu : kSingleLegFallbackPCU;
+    }
+    if (!is_ns && topology_ == TOPOLOGY_T_JUNCTION_3WAY_NS_E) {
+      bool fresh = hasFreshObservation('E', now);
+      status = fresh ? PHASE_FULLY_MEASURED : PHASE_UNOBSERVED;
+      return fresh ? east_.p_pcu : kSingleLegFallbackPCU;
+    }
+    if (!is_ns && topology_ == TOPOLOGY_DOUBLE_CYCLE_NS_E_NS_W) {
+      char active_ew_leg = (stage_idx_ == 3) ? 'W' : 'E';
+      const ApproachState &app = (active_ew_leg == 'W') ? west_ : east_;
+      bool fresh = hasFreshObservation(active_ew_leg, now);
+      status = fresh ? PHASE_FULLY_MEASURED : PHASE_UNOBSERVED;
+      return fresh ? app.p_pcu : kSingleLegFallbackPCU;
+    }
+
     bool leg1_fresh = hasFreshObservation(leg1, now);
     bool leg2_fresh = hasFreshObservation(leg2, now);
 
@@ -164,6 +269,16 @@ class TrafficController {
     return pcu1 + pcu2;
   }
 
+  float getPhaseInflow(int phase_idx, unsigned long now) const {
+    if (phase_idx == 0) {
+      if (topology_ == TOPOLOGY_T_JUNCTION_3WAY_EW_N) return getApproachInflow('N', now);
+      return getApproachInflow('N', now) + getApproachInflow('S', now);
+    } else {
+      if (topology_ == TOPOLOGY_T_JUNCTION_3WAY_NS_E) return getApproachInflow('E', now);
+      return getApproachInflow('E', now) + getApproachInflow('W', now);
+    }
+  }
+
   // Evaluates current overall controller operating mode
   ControllerMode getOperatingMode() const {
     unsigned long now = getCurrentTimeMs();
@@ -176,8 +291,8 @@ class TrafficController {
   // Calculate dynamic green time based on total concurrent phase demand (PCU)
   float calculateGreenTime(float phase_pcu) const {
     float green = kStartupLostTime + (phase_pcu / kPhaseDischargeRate);
-    if (green < kMinGreen) green = kMinGreen;
-    if (green > kMaxGreen) green = kMaxGreen;
+    if (green < min_green_s_) green = min_green_s_;
+    if (green > max_green_s_) green = max_green_s_;
     return green;
   }
 
@@ -242,7 +357,7 @@ class TrafficController {
     switch (state_) {
       case STATE_ALL_RED_STARTUP:
         if (elapsed_s >= kStartupAllRedHold) {
-          enterGreenPhase(STATE_NS_GREEN, mode, q_ns, ns_wait_time_s_);
+          enterGreenPhase(STATE_NS_GREEN, mode, q_ns, q_ew, 0, now, ns_wait_time_s_);
         }
         break;
 
@@ -253,14 +368,14 @@ class TrafficController {
         break;
 
       case STATE_NS_YELLOW:
-        if (elapsed_s >= kYellowTime) {
+        if (elapsed_s >= yellow_time_s_) {
           switchState(STATE_ALL_RED_TO_EW);
         }
         break;
 
       case STATE_ALL_RED_TO_EW:
-        if (elapsed_s >= kAllRedTime) {
-          enterGreenPhase(STATE_EW_GREEN, mode, q_ew, ew_wait_time_s_);
+        if (elapsed_s >= all_red_time_s_) {
+          enterGreenPhase(STATE_EW_GREEN, mode, q_ns, q_ew, 1, now, ew_wait_time_s_);
         }
         break;
 
@@ -271,14 +386,14 @@ class TrafficController {
         break;
 
       case STATE_EW_YELLOW:
-        if (elapsed_s >= kYellowTime) {
+        if (elapsed_s >= yellow_time_s_) {
           switchState(STATE_ALL_RED_TO_NS);
         }
         break;
 
       case STATE_ALL_RED_TO_NS:
-        if (elapsed_s >= kAllRedTime) {
-          enterGreenPhase(STATE_NS_GREEN, mode, q_ns, ns_wait_time_s_);
+        if (elapsed_s >= all_red_time_s_) {
+          enterGreenPhase(STATE_NS_GREEN, mode, q_ns, q_ew, 0, now, ns_wait_time_s_);
         }
         break;
 
@@ -318,9 +433,9 @@ class TrafficController {
       case STATE_NS_GREEN:
       case STATE_EW_GREEN:        total = allocated_green_s_; break;
       case STATE_NS_YELLOW:
-      case STATE_EW_YELLOW:       total = kYellowTime; break;
+      case STATE_EW_YELLOW:       total = yellow_time_s_; break;
       case STATE_ALL_RED_TO_EW:
-      case STATE_ALL_RED_TO_NS:   total = kAllRedTime; break;
+      case STATE_ALL_RED_TO_NS:   total = all_red_time_s_; break;
       case STATE_FAILSAFE_FLASH:
       default:                    return 0.0f;
     }
@@ -363,6 +478,23 @@ class TrafficController {
   unsigned long last_tick_time_ms_;
   float allocated_green_s_;
 
+  IRC93TimingProfile active_profile_;
+  IntersectionTopology topology_;
+  int stage_idx_;
+  int max_stage_skips_;
+  int ew_substage_skips_[2];
+  float min_green_s_;
+  float max_green_s_;
+  float yellow_time_s_;
+  float all_red_time_s_;
+  float max_wait_starvation_s_;
+  float fixed_fallback_green_s_;
+
+  bool enable_moderato_;
+  float moderato_max_step_down_s_;
+  ModeratoRegime active_regime_;
+  float prev_phase_green_s_[2];
+
   float ns_wait_time_s_;
   float ew_wait_time_s_;
 
@@ -378,6 +510,7 @@ class TrafficController {
     app.q_count = 0;
     app.d_tail_m = 0.0f;
     app.p_pcu = 0.0f;
+    app.inflow_pcu = 0.0f;
     app.last_seen = 0;
     app.is_valid = false;
   }
@@ -411,20 +544,95 @@ class TrafficController {
     // Gap-Out Policy: Strictly requires MODE_ADAPTIVE_FULL (both corridors FULLY MEASURED)
     // Partially measured or fallback demand is strictly barred from truncating active green
     bool gap_out = (mode == MODE_ADAPTIVE_FULL) &&
-                   (elapsed_s >= kMinGreen) &&
+                   (elapsed_s >= min_green_s_) &&
                    (active_pcu < kGapOutActiveThresholdPCU) &&
                    (opposing_pcu >= kMinOpposingDemandPCU);
 
     // Anti-Starvation Protection (continuous unserviced wait ceiling)
-    bool starvation = (opposing_wait_s >= kMaxWaitStarvation) && (opposing_pcu >= kMinOpposingDemandPCU);
+    bool starvation = (opposing_wait_s >= max_wait_starvation_s_) && (opposing_pcu >= kMinOpposingDemandPCU);
     bool max_green_expired = (elapsed_s >= allocated_green_s_);
 
     return gap_out || starvation || max_green_expired;
   }
 
+  float allocatePhaseGreen(int phase_idx, float q_ns, float q_ew, unsigned long now) {
+    float phase_pcu = (phase_idx == 0) ? q_ns : q_ew;
+    if (!enable_moderato_) {
+      float alloc = calculateGreenTime(phase_pcu);
+      prev_phase_green_s_[phase_idx] = alloc;
+      return alloc;
+    }
+
+    float in0 = getPhaseInflow(0, now);
+    float in1 = getPhaseInflow(1, now);
+    float cap = max(1.0f, (max_green_s_ - kStartupLostTime) * kPhaseDischargeRate);
+    float l0 = (q_ns + in0) / cap;
+    float l1 = (q_ew + in1) / cap;
+    float l_total = l0 + l1;
+
+    if (l_total < 0.50f) {
+      active_regime_ = REGIME_DELAY_MINIMUM;
+    } else if (l_total <= 1.00f) {
+      active_regime_ = REGIME_CONGESTION_CONTROL;
+    } else {
+      active_regime_ = REGIME_BALANCED_CONTROL;
+    }
+
+    float alloc = min_green_s_;
+    float phase_inflow = (phase_idx == 0) ? in0 : in1;
+
+    if (active_regime_ == REGIME_DELAY_MINIMUM) {
+      alloc = calculateGreenTime(phase_pcu);
+    } else if (active_regime_ == REGIME_CONGESTION_CONTROL) {
+      float raw_alloc = calculateGreenTime(phase_pcu + phase_inflow);
+      float prev = prev_phase_green_s_[phase_idx];
+      if (prev > 0.0f && raw_alloc < prev - moderato_max_step_down_s_) {
+        alloc = max(min_green_s_, prev - moderato_max_step_down_s_);
+      } else {
+        alloc = raw_alloc;
+      }
+    } else {
+      float score_0 = max(0.05f, l0 + (ns_wait_time_s_ / max(1.0f, max_wait_starvation_s_)));
+      float score_1 = max(0.05f, l1 + (ew_wait_time_s_ / max(1.0f, max_wait_starvation_s_)));
+      float raw_g0 = kStartupLostTime + (q_ns + in0) / kPhaseDischargeRate;
+      float raw_g1 = kStartupLostTime + (q_ew + in1) / kPhaseDischargeRate;
+      float budget = min(2.0f * max_green_s_, max(2.0f * min_green_s_, raw_g0 + raw_g1));
+      float share = ((phase_idx == 0) ? score_0 : score_1) / (score_0 + score_1);
+      alloc = min(max(budget * share, min_green_s_), max_green_s_);
+    }
+
+    prev_phase_green_s_[phase_idx] = alloc;
+    return alloc;
+  }
+
   void enterGreenPhase(SignalState green_state, ControllerMode mode,
-                       float phase_pcu, float &wait_time_s) {
-    allocated_green_s_ = (mode == MODE_FIXED_FALLBACK) ? kFixedFallbackGreen : calculateGreenTime(phase_pcu);
+                       float q_ns, float q_ew, int phase_idx, unsigned long now, float &wait_time_s) {
+    if (topology_ == TOPOLOGY_DOUBLE_CYCLE_NS_E_NS_W) {
+      if (phase_idx == 0) {
+        stage_idx_ = (stage_idx_ == 1) ? 2 : 0;
+      } else {
+        int cand_stage = (stage_idx_ == 0) ? 1 : 3;
+        char cand_leg = (cand_stage == 1) ? 'E' : 'W';
+        int skip_slot = (cand_stage == 1) ? 0 : 1;
+        const ApproachState &cand_app = (cand_leg == 'E') ? east_ : west_;
+        if (max_stage_skips_ > 0 && hasFreshObservation(cand_leg, now) &&
+            cand_app.p_pcu < kGapOutActiveThresholdPCU && ew_substage_skips_[skip_slot] < max_stage_skips_) {
+          ew_substage_skips_[skip_slot]++;
+          cand_stage = (cand_stage == 1) ? 3 : 1;
+          skip_slot = (cand_stage == 1) ? 0 : 1;
+        }
+        ew_substage_skips_[skip_slot] = 0;
+        stage_idx_ = cand_stage;
+        PhaseObservationStatus ew_st;
+        q_ew = getPhaseDemand('E', 'W', now, ew_st);
+      }
+    } else {
+      stage_idx_ = phase_idx;
+    }
+
+    allocated_green_s_ = (mode == MODE_FIXED_FALLBACK)
+                             ? fixed_fallback_green_s_
+                             : allocatePhaseGreen(phase_idx, q_ns, q_ew, now);
     wait_time_s = 0.0f;
     switchState(green_state);
   }
@@ -436,8 +644,8 @@ class TrafficController {
     }
 
     // 2. Invariant: Allocated green must be finite and within operational bounds
-    if (!isfinite(allocated_green_s_) || allocated_green_s_ < kMinGreen ||
-        allocated_green_s_ > max(+kMaxGreen, +kFixedFallbackGreen)) {
+    if (!isfinite(allocated_green_s_) || allocated_green_s_ < min_green_s_ ||
+        allocated_green_s_ > max(max_green_s_, fixed_fallback_green_s_)) {
       return false;
     }
 
@@ -452,12 +660,12 @@ class TrafficController {
     }
 
     // 4. Runaway Clearance Guard: Clearance phases must terminate deterministically
-    // If yellow exceeds kYellowTime + 1.0s or all-red exceeds kAllRedTime + 1.0s, FSM has stalled
+    // If yellow exceeds yellow_time_s_ + 1.0s or all-red exceeds all_red_time_s_ + 1.0s, FSM has stalled
     if (state_ == STATE_NS_YELLOW || state_ == STATE_EW_YELLOW) {
-      if (elapsed_s > (kYellowTime + kClearanceRunawayMarginS)) return false;
+      if (elapsed_s > (yellow_time_s_ + kClearanceRunawayMarginS)) return false;
     }
     if (state_ == STATE_ALL_RED_TO_EW || state_ == STATE_ALL_RED_TO_NS) {
-      if (elapsed_s > (kAllRedTime + kClearanceRunawayMarginS)) return false;
+      if (elapsed_s > (all_red_time_s_ + kClearanceRunawayMarginS)) return false;
     }
     if (state_ == STATE_ALL_RED_STARTUP) {
       if (elapsed_s > (kStartupAllRedHold + kClearanceRunawayMarginS)) return false;

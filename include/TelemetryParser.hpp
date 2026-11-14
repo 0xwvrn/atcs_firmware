@@ -18,6 +18,7 @@ struct ParsedTelemetry {
   int q_count;       // Valid vehicle queue count (>= 0)
   float d_tail_m;    // Distance to queue tail in meters (>= 0.0)
   float p_pcu;       // Passenger Car Unit demand (>= 0.0)
+  float inflow_pcu;  // Approaching inflow PCU demand (>= 0.0)
   bool is_valid;     // Strict pipeline calibration and sanity gate
 };
 
@@ -125,10 +126,19 @@ class TelemetryParser {
     float pcu_val = 0.0f;
     if (!parseFloat(k_pcu, end, buf, pcu_val)) return false;
 
+    // 8. Parse "inflow_pcu": <float> (optional, defaults to 0.0)
+    float inflow_val = 0.0f;
+    const char* k_in = findKey(buf, start, end, "inflow_pcu");
+    if (k_in) {
+      if (findNextKey(k_in + 12, end - (k_in + 12 - buf), "inflow_pcu") != nullptr) return false;
+      if (!parseFloat(k_in, end, buf, inflow_val)) return false;
+    }
+
     out.approach = leg;
     out.q_count = q_val;
     out.d_tail_m = d_tail;
     out.p_pcu = pcu_val;
+    out.inflow_pcu = inflow_val;
     out.is_valid = valid;
     return true;
   }

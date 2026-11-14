@@ -35,7 +35,7 @@ void loop() {
       Serial,
       [](const ParsedTelemetry &pkt) {
         controller.updateApproach(pkt.approach, pkt.q_count, pkt.d_tail_m,
-                                  pkt.p_pcu, pkt.is_valid);
+                                  pkt.p_pcu, pkt.is_valid, pkt.inflow_pcu);
         last_queue_rx_ms = millis();
       },
       [](int64_t parse_us) {

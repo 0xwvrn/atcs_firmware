@@ -1027,10 +1027,74 @@ void testStage6SafetyAndSchedulingEdgeCases() {
   }
 }
 
+void testModeratoTopologiesAndIRC93Profiles() {
+  std::cout << "\n# C++ Test 18: MODERATO Regimes, 3-Way Topology & IRC:93 Timing Profiles" << std::endl;
+
+  // 1. TelemetryParser inflow_pcu parsing
+  ParsedTelemetry pkt;
+  const char* json_inflow = "{\"approach\":\"N\",\"Q\":9,\"PCU\":9.0,\"D_tail_m\":28.0,\"inflow_pcu\":3.5,\"valid\":true}";
+  assert(TelemetryParser::parse(json_inflow, strlen(json_inflow), pkt));
+  assert(std::fabs(pkt.inflow_pcu - 3.5f) < 0.01f);
+
+  // 2. MODERATO CONGESTION_CONTROL (queue + inflow) & step-down cap
+  TrafficController mod_ctrl;
+  mod_ctrl.setModeratoEnabled(true, 10.0f);
+  mod_ctrl.setMockTimeMs(0);
+  mod_ctrl.updateApproach('N', 9, 30.0f, 9.0f, true, 3.0f);
+  mod_ctrl.updateApproach('S', 9, 30.0f, 9.0f, true, 3.0f);
+  mod_ctrl.updateApproach('E', 5, 20.0f, 5.0f, true, 0.0f);
+  mod_ctrl.updateApproach('W', 5, 20.0f, 5.0f, true, 0.0f);
+  mod_ctrl.tick();
+  mod_ctrl.setMockTimeMs(2100);
+  mod_ctrl.tick();
+  assert(mod_ctrl.getState() == STATE_NS_GREEN);
+  assert(mod_ctrl.getActiveRegime() == REGIME_CONGESTION_CONTROL);
+  assert(std::fabs(mod_ctrl.getAllocatedGreen() - 27.5f) < 0.05f);
+
+  // 3. 3-Way T-Junction (TOPOLOGY_T_JUNCTION_3WAY_NS_E: no 'W' sensor)
+  TrafficController t3_ctrl;
+  t3_ctrl.setTopology(TOPOLOGY_T_JUNCTION_3WAY_NS_E);
+  t3_ctrl.setMockTimeMs(0);
+  t3_ctrl.updateApproach('N', 6, 20.0f, 6.0f, true);
+  t3_ctrl.updateApproach('S', 6, 20.0f, 6.0f, true);
+  t3_ctrl.updateApproach('E', 4, 15.0f, 4.0f, true);
+  t3_ctrl.tick();
+  assert(t3_ctrl.getOperatingMode() == MODE_ADAPTIVE_FULL);
+
+  // 4. IRC:93 Profiles (PROFILE_URBAN_ARTERIAL 60s & PROFILE_HEAVY_METRO 75s)
+  TrafficController irc_ctrl;
+  irc_ctrl.applyTimingProfile(PROFILE_URBAN_ARTERIAL);
+  assert(std::fabs(irc_ctrl.calculateGreenTime(70.0f) - 60.0f) < 0.05f);
+  irc_ctrl.applyTimingProfile(PROFILE_HEAVY_METRO);
+  assert(std::fabs(irc_ctrl.calculateGreenTime(1.0f) - 15.0f) < 0.05f);
+  assert(std::fabs(irc_ctrl.calculateGreenTime(90.0f) - 75.0f) < 0.05f);
+
+  // 5. Double-Cycling (A -> B -> A -> C) with Bounded Stage Omit (max_stage_skips = 1)
+  TrafficController dc_ctrl;
+  dc_ctrl.setTopology(TOPOLOGY_DOUBLE_CYCLE_NS_E_NS_W, 1);
+  unsigned long t = 0;
+  auto feed_dc = [&]() {
+    dc_ctrl.setMockTimeMs(t);
+    dc_ctrl.updateApproach('N', 5, 15.0f, 5.0f, true);
+    dc_ctrl.updateApproach('S', 5, 15.0f, 5.0f, true);
+    dc_ctrl.updateApproach('E', 0, 0.0f, 0.0f, true);  // Empty E
+    dc_ctrl.updateApproach('W', 8, 25.0f, 8.0f, true); // Active W
+    dc_ctrl.tick();
+  };
+  feed_dc();
+  while (dc_ctrl.getState() != STATE_NS_GREEN) { t += 100; feed_dc(); }
+  assert(dc_ctrl.getActiveStageIndex() == 0);
+  while (dc_ctrl.getState() != STATE_EW_GREEN) { t += 100; feed_dc(); }
+  assert(dc_ctrl.getActiveStageIndex() == 3); // Stage 1 ('E') omitted once -> jumped to Stage 3 ('W')
+  while (dc_ctrl.getState() != STATE_NS_GREEN) { t += 100; feed_dc(); }
+  while (dc_ctrl.getState() != STATE_EW_GREEN) { t += 100; feed_dc(); }
+  assert(dc_ctrl.getActiveStageIndex() == 1); // Next cycle guarantees Stage 1 ('E') service!
+
+  std::cout << "  [PASS] MODERATO inflow, 3-Way T-Junction, Double-Cycling Stage Omit, and IRC:93 profiles verified." << std::endl;
+}
+
 int main() {
-  std::cout << "=================================================================" << std::endl;
-  std::cout << "  TrafficController C++ Native Verification Test Suite (v3.6)" << std::endl;
-  std::cout << "=================================================================" << std::endl;
+  std::cout << "# TrafficController C++ Native Verification Test Suite" << std::endl;
 
   testInputValidation();
   testPartialMeasurementGapOutSuppression();
@@ -1049,9 +1113,8 @@ int main() {
   testDegradedModeDemandAndStarvationWatchdog();
   testExhaustiveTelemetryParserMalformedInputs();
   testStage6SafetyAndSchedulingEdgeCases();
+  testModeratoTopologiesAndIRC93Profiles();
 
-  std::cout << "\n=================================================================" << std::endl;
-  std::cout << "  ALL 17 C++ EMBEDDED CONTROLLER VERIFICATION TESTS PASSED (0 ERRORS)." << std::endl;
-  std::cout << "=================================================================" << std::endl;
+  std::cout << "\nAll 18 C++ embedded controller verification tests passed." << std::endl;
   return 0;
 }
