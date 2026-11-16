@@ -12,32 +12,40 @@
 using std::isfinite;
 #endif
 
-// Structured telemetry packet container
+// Structured telemetry packet container (Canonical Schema v1)
 struct ParsedTelemetry {
-  char approach;        // 'N', 'S', 'E', 'W'
-  int q_count;          // Valid vehicle queue count (>= 0)
-  float d_tail_m;       // Distance to queue tail in meters (>= 0.0)
-  float p_pcu;          // Passenger Car Unit demand (>= 0.0)
-  float inflow_pcu;     // Approaching inflow PCU demand (>= 0.0)
-  bool is_valid;        // Strict pipeline calibration and sanity gate
-  int8_t profile_cmd;   // -1: unchanged, 0: BASELINE_45S, 1: URBAN_ARTERIAL, 2: HEAVY_METRO
-  int8_t topology_cmd;  // -1: unchanged, 0: STANDARD_4WAY, 1: T_3WAY_NS_E, 2: T_3WAY_EW_N, 3: DOUBLE_CYCLE
-  int8_t moderato_cmd;  // -1: unchanged, 0: disable, 1: enable
+  int protocol_version;     // Schema version ("v"), must be 1 (defaults to 1 if omitted)
+  char approach;            // 'N', 'S', 'E', 'W'
+  int q_count;              // Valid vehicle queue count (>= 0)
+  float d_tail_m;           // Validated metric distance to queue tail in meters (>= 0.0)
+  float p_pcu;              // Stopline-connected queue Passenger Car Unit demand (>= 0.0)
+  float pcu_upstream;       // Stationary upstream cluster PCU (>= 0.0)
+  float inflow_pcu;         // Approaching physical upstream demand PCU (>= 0.0)
+  float arrival_rate_pcu_s; // Rolling-window unique vehicle arrival rate in PCU/s (>= 0.0)
+  bool is_calibrated;       // True only when homography calibration status is VALID
+  bool is_fresh;            // True only when camera stream is fresh and not frozen
+  bool is_valid;            // Strict pipeline observation validity gate (valid && fresh)
+  long seq;                 // Packet sequence counter (>= 0)
+  int8_t profile_cmd;       // -1: unchanged, 0: BASELINE_45S, 1: URBAN_ARTERIAL, 2: HEAVY_METRO
+  int8_t topology_cmd;      // -1: unchanged, 0: STANDARD_4WAY, 1: T_3WAY_NS_E, 2: T_3WAY_EW_N, 3: DOUBLE_CYCLE
+  int8_t moderato_cmd;      // -1: unchanged, 0: disable, 1: enable
 };
 
 // Zero-allocation, strict length-bounded JSON telemetry validator & parser for ATCS
 class TelemetryParser {
  public:
-  static const size_t kMaxTelemetryLength = 1024;
+  // Matches BoardConfig::SERIAL_BUF_SIZE - 1 (511 JSON payload bytes + 1 newline/NUL byte = 512 bytes)
+  static const size_t kMaxTelemetryLength = 511;
+  static const int kSupportedProtocolVersion = 1;
 
   // Parses and strictly validates a telemetry packet.
   // Enforces:
-  // 1. Length bounds (7 to 1024 bytes) without assuming NUL-termination.
+  // 1. Length bounds (7 to 511 bytes) without assuming NUL-termination.
   // 2. Strict outer JSON object boundaries '{' and '}'.
   // 3. Exact key matching with legal token delimiters (',', '}', whitespace).
-  // 4. Duplicate key rejection (ensures each required key appears exactly once).
+  // 4. Duplicate key rejection (ensures each key appears at most once).
   // 5. Strict numeric and boolean syntax (rejects NaN, Inf, negative values, and trailing syntax garbage).
-  // 6. Value domain validity (approach in {N,S,E,W}, non-negative queue, PCU, distance).
+  // 6. Value domain validity (approach in {N,S,E,W}, protocol version == 1, non-negative queue, PCU, distance).
   static bool parse(const char* buffer, size_t length, ParsedTelemetry &out) {
     if (!buffer || length < 7 || length > kMaxTelemetryLength) return false;
 
@@ -60,17 +68,16 @@ class TelemetryParser {
     while (end > start && isspace((unsigned char)buf[end])) end--;
     if (buf[end] != '}') return false;
 
-    // Check balanced braces: exactly one root object '{' and '}'
-    size_t brace_depth = 0;
-    for (size_t i = start; i <= end; ++i) {
-      if (buf[i] == '{') brace_depth++;
-      else if (buf[i] == '}') {
-        if (brace_depth == 0) return false;
-        brace_depth--;
-        if (brace_depth == 0 && i < end) return false; // Trailing garbage after root object
-      }
+    // Check balanced braces and strict top-level JSON key-value syntax with universal duplicate-key rejection
+    if (!validateJsonObjectAndUniqueKeys(buf, start, end)) return false;
+
+    // 1b. Optional protocol version ("v"): defaults to 1, rejects unknown versions
+    int proto_ver = kSupportedProtocolVersion;
+    const char* k_ver = findKey(buf, start, end, "v");
+    if (k_ver) {
+      if (findNextKey(k_ver + 3, end - (k_ver + 3 - buf), "v") != nullptr) return false;
+      if (!parseInt(k_ver, end, buf, proto_ver) || proto_ver != kSupportedProtocolVersion) return false;
     }
-    if (brace_depth != 0) return false;
 
     // 2. Locate and enforce uniqueness for approach identifier ("approach" or "leg")
     const char* k_app = findKey(buf, start, end, "approach");
@@ -129,12 +136,52 @@ class TelemetryParser {
     float pcu_val = 0.0f;
     if (!parseFloat(k_pcu, end, buf, pcu_val)) return false;
 
-    // 8. Parse "inflow_pcu": <float> (optional, defaults to 0.0)
+    // 8. Parse "pcu_upstream": <float> (optional, defaults to 0.0)
+    float pcu_up_val = 0.0f;
+    const char* k_up = findKey(buf, start, end, "pcu_upstream");
+    if (k_up) {
+      if (findNextKey(k_up + 14, end - (k_up + 14 - buf), "pcu_upstream") != nullptr) return false;
+      if (!parseFloat(k_up, end, buf, pcu_up_val)) return false;
+    }
+
+    // 8b. Parse "inflow_pcu": <float> (optional, defaults to 0.0)
     float inflow_val = 0.0f;
     const char* k_in = findKey(buf, start, end, "inflow_pcu");
     if (k_in) {
       if (findNextKey(k_in + 12, end - (k_in + 12 - buf), "inflow_pcu") != nullptr) return false;
       if (!parseFloat(k_in, end, buf, inflow_val)) return false;
+    }
+
+    // 8c. Parse "arrival_rate_pcu_s": <float> (optional, defaults to 0.0, max 50.0 PCU/s)
+    float arr_rate_val = 0.0f;
+    const char* k_arr = findKey(buf, start, end, "arrival_rate_pcu_s");
+    if (k_arr) {
+      if (findNextKey(k_arr + 20, end - (k_arr + 20 - buf), "arrival_rate_pcu_s") != nullptr) return false;
+      if (!parseFloat(k_arr, end, buf, arr_rate_val) || arr_rate_val > 50.0f) return false;
+    }
+
+    // 8d. Parse optional "calibrated" and "fresh" booleans and "seq" counter
+    bool calibrated = valid;
+    const char* k_cal = findKey(buf, start, end, "calibrated");
+    if (k_cal) {
+      if (findNextKey(k_cal + 12, end - (k_cal + 12 - buf), "calibrated") != nullptr) return false;
+      if (!parseBool(k_cal, end, buf, calibrated)) return false;
+    }
+
+    bool fresh = valid;
+    const char* k_fr = findKey(buf, start, end, "fresh");
+    if (k_fr) {
+      if (findNextKey(k_fr + 7, end - (k_fr + 7 - buf), "fresh") != nullptr) return false;
+      if (!parseBool(k_fr, end, buf, fresh)) return false;
+    }
+
+    long seq_val = 0;
+    const char* k_seq = findKey(buf, start, end, "seq");
+    if (k_seq) {
+      if (findNextKey(k_seq + 5, end - (k_seq + 5 - buf), "seq") != nullptr) return false;
+      int parsed_seq = 0;
+      if (!parseInt(k_seq, end, buf, parsed_seq, 2147483647L)) return false;
+      seq_val = parsed_seq;
     }
 
     // 9. Optional runtime configuration commands ("profile", "topology", "moderato")
@@ -154,12 +201,19 @@ class TelemetryParser {
       moderato_cmd = mod_val ? 1 : 0;
     }
 
+    bool effective_valid = valid && fresh;
+    out.protocol_version = proto_ver;
     out.approach = leg;
-    out.q_count = q_val;
-    out.d_tail_m = d_tail;
-    out.p_pcu = pcu_val;
-    out.inflow_pcu = inflow_val;
-    out.is_valid = valid;
+    out.q_count = effective_valid ? q_val : 0;
+    out.d_tail_m = (effective_valid && calibrated) ? d_tail : 0.0f;
+    out.p_pcu = effective_valid ? pcu_val : 0.0f;
+    out.pcu_upstream = (effective_valid && calibrated) ? pcu_up_val : 0.0f;
+    out.inflow_pcu = (effective_valid && calibrated) ? inflow_val : 0.0f;
+    out.arrival_rate_pcu_s = (effective_valid && calibrated) ? arr_rate_val : 0.0f;
+    out.is_calibrated = calibrated;
+    out.is_fresh = fresh;
+    out.is_valid = effective_valid;
+    out.seq = seq_val;
     out.profile_cmd = profile_cmd;
     out.topology_cmd = topology_cmd;
     out.moderato_cmd = moderato_cmd;
@@ -189,6 +243,96 @@ class TelemetryParser {
       cur++;
     }
     return nullptr;
+  }
+
+  static bool validateJsonObjectAndUniqueKeys(const char* buf, size_t start, size_t end) {
+    if (buf[start] != '{' || buf[end] != '}') return false;
+
+    const char* key_ptrs[32];
+    size_t key_lens[32];
+    size_t key_count = 0;
+
+    size_t pos = start + 1;
+    while (pos < end && isspace((unsigned char)buf[pos])) pos++;
+    if (pos == end) return false; // Empty object "{}"
+
+    while (pos < end) {
+      // 1. Parse quoted key
+      if (buf[pos] != '\"') return false;
+      size_t k_start = pos + 1;
+      size_t k_end = k_start;
+      while (k_end < end && buf[k_end] != '\"') {
+        if (buf[k_end] == '\\') return false;
+        k_end++;
+      }
+      if (k_end >= end || k_end == k_start) return false;
+      size_t k_len = k_end - k_start;
+
+      // Reject duplicate keys across the entire JSON object
+      for (size_t i = 0; i < key_count; ++i) {
+        if (key_lens[i] == k_len && strncmp(key_ptrs[i], buf + k_start, k_len) == 0) {
+          return false;
+        }
+      }
+      if (key_count >= 32) return false;
+      key_ptrs[key_count] = buf + k_start;
+      key_lens[key_count] = k_len;
+      key_count++;
+
+      pos = k_end + 1;
+      while (pos < end && isspace((unsigned char)buf[pos])) pos++;
+      if (pos >= end || buf[pos] != ':') return false;
+      pos++;
+      while (pos < end && isspace((unsigned char)buf[pos])) pos++;
+      if (pos >= end) return false;
+
+      // 2. Validate JSON value token (string, number, true, false, null)
+      if (buf[pos] == '\"') {
+        pos++;
+        while (pos < end && buf[pos] != '\"') {
+          if (buf[pos] == '\\') return false;
+          pos++;
+        }
+        if (pos >= end) return false;
+        pos++;
+      } else if (strncmp(buf + pos, "true", 4) == 0) {
+        pos += 4;
+      } else if (strncmp(buf + pos, "false", 5) == 0) {
+        pos += 5;
+      } else if (strncmp(buf + pos, "null", 4) == 0) {
+        pos += 4;
+      } else if (isdigit((unsigned char)buf[pos]) || buf[pos] == '-') {
+        if (buf[pos] == '-') {
+          pos++;
+          if (pos >= end || !isdigit((unsigned char)buf[pos])) return false;
+        }
+        if (buf[pos] == '0' && pos + 1 < end && (buf[pos + 1] == 'x' || buf[pos + 1] == 'X' || isdigit((unsigned char)buf[pos + 1]))) {
+          return false; // Reject hex literals and leading zeros
+        }
+        while (pos < end && isdigit((unsigned char)buf[pos])) pos++;
+        if (pos < end && buf[pos] == '.') {
+          pos++;
+          if (pos >= end || !isdigit((unsigned char)buf[pos])) return false;
+          while (pos < end && isdigit((unsigned char)buf[pos])) pos++;
+        }
+        if (pos < end && (buf[pos] == 'e' || buf[pos] == 'E')) {
+          pos++;
+          if (pos < end && (buf[pos] == '+' || buf[pos] == '-')) pos++;
+          if (pos >= end || !isdigit((unsigned char)buf[pos])) return false;
+          while (pos < end && isdigit((unsigned char)buf[pos])) pos++;
+        }
+      } else {
+        return false; // Reject nested objects/arrays or unquoted syntax garbage
+      }
+
+      while (pos < end && isspace((unsigned char)buf[pos])) pos++;
+      if (pos == end) break;
+      if (buf[pos] != ',') return false;
+      pos++;
+      while (pos < end && isspace((unsigned char)buf[pos])) pos++;
+      if (pos == end) return false; // Reject trailing comma before '}'
+    }
+    return true;
   }
 
   static bool isLegalValueDelimiter(char c) {
@@ -235,7 +379,7 @@ class TelemetryParser {
     return false;
   }
 
-  static bool parseInt(const char* key_ptr, size_t end, const char* buf, int &int_out) {
+  static bool parseInt(const char* key_ptr, size_t end, const char* buf, int &int_out, long max_val = 500L) {
     const char* colon = strchr(key_ptr, ':');
     if (!colon || colon > buf + end) return false;
     colon++;
@@ -248,7 +392,7 @@ class TelemetryParser {
     long val = strtol(colon, &endptr, 10);
     if (!endptr || endptr == colon) return false;
     if (!isLegalValueDelimiter(*endptr)) return false;
-    if (val < 0 || val > 500) return false;
+    if (val < 0 || val > max_val) return false;
     int_out = (int)val;
     return true;
   }
@@ -259,8 +403,9 @@ class TelemetryParser {
     colon++;
     while (colon <= buf + end && isspace((unsigned char)*colon)) colon++;
     if (colon > buf + end) return false;
-    // Strictly reject negative numbers, NaN, and Inf
-    if (!isdigit((unsigned char)*colon) && *colon != '+') return false;
+    // Strictly reject negative numbers, leading '+', hex literals, NaN, and Inf
+    if (!isdigit((unsigned char)*colon)) return false;
+    if (*colon == '0' && (colon[1] == 'x' || colon[1] == 'X')) return false;
 
     char* endptr = nullptr;
     float val = strtof(colon, &endptr);

@@ -111,7 +111,7 @@ struct SimulatedFirmwareContext {
 static void onTelemetryPacket(const ParsedTelemetry& pkt) {
   if (g_ctx) {
     g_ctx->controller.updateApproach(pkt.approach, pkt.q_count, pkt.d_tail_m,
-                                     pkt.p_pcu, pkt.is_valid);
+                                     pkt.p_pcu, pkt.is_valid, pkt.inflow_pcu);
     g_ctx->last_queue_rx_ms = g_ctx->mock_time_ms;
   }
 }
@@ -308,6 +308,118 @@ void testScenarioE_CombinedExecution() {
   std::cout << "  [PASS] 100 continuous orchestration ticks completed with 0 invariant violations." << std::endl;
 }
 
+// Scenario F: Valid-but-Uncalibrated Telemetry (calibrated=false, valid=true)
+void testScenarioF_ValidUncalibratedTelemetry() {
+  std::cout << "\n--- Integration Scenario F: Valid-but-Uncalibrated Telemetry ---" << std::endl;
+  SimulatedFirmwareContext ctx;
+  ctx.setup();
+
+  const char legs[4] = {'N', 'S', 'E', 'W'};
+  for (char leg : legs) {
+    int q = (leg == 'N' || leg == 'S') ? 8 : 2;
+    float pcu = (leg == 'N' || leg == 'S') ? 10.0f : 2.0f;
+    std::string pkt = std::string("{\"v\":1,\"approach\":\"") + leg +
+                      "\",\"Q\":" + std::to_string(q) +
+                      ",\"PCU\":" + std::to_string(static_cast<int>(pcu)) + ".0" +
+                      ",\"D_tail_m\":30.0,\"pcu_upstream\":4.0,\"inflow_pcu\":4.0," +
+                      "\"arrival_rate_pcu_s\":0.3,\"calibrated\":false,\"fresh\":true,\"valid\":true,\"seq\":1}\n";
+    ctx.serial_stream.append(pkt);
+  }
+
+  // Drain all 4 packets across loop ticks within startup hold
+  int64_t t_sim = 100000;
+  for (int i = 0; i < 4; ++i) {
+    ctx.executeLoopIteration(t_sim);
+    t_sim += 100000;
+  }
+
+  assert(ctx.telemetry_receiver.getValidPackets() == 4);
+  ApproachState n = ctx.controller.getApproachState('N');
+  assert(n.is_valid == true);
+  assert(n.q_count == 8);
+  assert(std::fabs(n.p_pcu - 10.0f) < 0.01f);
+  assert(n.d_tail_m == 0.0f);   // Suppressed when uncalibrated
+  assert(n.inflow_pcu == 0.0f); // Suppressed when uncalibrated
+  assert(ctx.controller.getOperatingMode() == MODE_ADAPTIVE_FULL);
+
+  // Step past 2.0s startup all-red -> NS_GREEN with adaptive green (3.5 + 20.0/1.0 = 23.5s)
+  ctx.executeLoopIteration(2100000);
+  assert(ctx.controller.getState() == STATE_NS_GREEN);
+  assert(std::fabs(ctx.controller.getAllocatedGreen() - 23.5f) < 0.01f);
+  std::cout << "  [PASS] Uncalibrated valid demand preserved; metric fields suppressed; adaptive mode retained." << std::endl;
+}
+
+// Scenario G: Partial & Complete Sensor Failure and Safe Recovery
+void testScenarioG_SensorFailureAndRecovery() {
+  std::cout << "\n--- Integration Scenario G: Sensor Failure and Recovery ---" << std::endl;
+  SimulatedFirmwareContext ctx;
+  ctx.setup();
+
+  int64_t t_sim = 100000;
+  auto send_legs = [&](const char* legs_str, int q, float pcu) {
+    for (size_t i = 0; legs_str[i] != '\0'; ++i) {
+      std::string pkt = std::string("{\"v\":1,\"approach\":\"") + legs_str[i] +
+                        "\",\"Q\":" + std::to_string(q) +
+                        ",\"PCU\":" + std::to_string(static_cast<int>(pcu)) + ".0," +
+                        "\"calibrated\":true,\"fresh\":true,\"valid\":true}\n";
+      ctx.serial_stream.append(pkt);
+    }
+  };
+
+  send_legs("NSEW", 4, 4.0f);
+  for (int i = 0; i < 4; ++i) {
+    ctx.executeLoopIteration(t_sim);
+    t_sim += 100000;
+  }
+  assert(ctx.controller.getOperatingMode() == MODE_ADAPTIVE_FULL);
+
+  // Refresh N, E, W at t=3.0s while letting S go stale (> 5.0s)
+  t_sim = 3000000;
+  send_legs("NEW", 4, 4.0f);
+  for (int i = 0; i < 4; ++i) {
+    ctx.executeLoopIteration(t_sim);
+    t_sim += 100000;
+  }
+  t_sim = 5500000;
+  ctx.executeLoopIteration(t_sim);
+  assert(ctx.controller.getOperatingMode() == MODE_DEGRADED_PARTIAL);
+
+  // Let all 4 legs go stale (> 8.5s) -> MODE_FIXED_FALLBACK
+  t_sim = 9000000;
+  ctx.executeLoopIteration(t_sim);
+  assert(ctx.controller.getOperatingMode() == MODE_FIXED_FALLBACK);
+
+  // Advance until EW_GREEN enters under complete blackout -> fixed 25.0s
+  while (ctx.controller.getState() != STATE_EW_GREEN) {
+    t_sim += 100000;
+    ctx.executeLoopIteration(t_sim);
+  }
+  assert(std::fabs(ctx.controller.getAllocatedGreen() - 25.0f) < 0.01f);
+
+  // Restore valid telemetry on all 4 legs -> active EW_GREEN not truncated, next NS_GREEN adaptive
+  send_legs("NSEW", 12, 12.0f);
+  for (int i = 0; i < 4; ++i) {
+    t_sim += 50000;
+    ctx.executeLoopIteration(t_sim);
+  }
+  assert(ctx.controller.getState() == STATE_EW_GREEN);
+  assert(std::fabs(ctx.controller.getAllocatedGreen() - 25.0f) < 0.01f);
+
+  int step = 0;
+  while (ctx.controller.getState() != STATE_NS_GREEN) {
+    if (step % 10 == 0) {
+      send_legs("NSEW", 12, 12.0f);
+    }
+    t_sim += 100000;
+    ctx.executeLoopIteration(t_sim);
+    step++;
+  }
+  assert(ctx.controller.getOperatingMode() == MODE_ADAPTIVE_FULL);
+  // 3.5 + 24.0 / 1.0 = 27.5s
+  assert(std::fabs(ctx.controller.getAllocatedGreen() - 27.5f) < 0.01f);
+  std::cout << "  [PASS] Partial failure, complete blackout fallback, and safe adaptive recovery verified." << std::endl;
+}
+
 int main() {
   std::cout << "=================================================================" << std::endl;
   std::cout << "  ESP32-S3 ATCS Firmware Native Integration Test Suite" << std::endl;
@@ -318,9 +430,11 @@ int main() {
   testScenarioC_ControllerToSignalFlow();
   testScenarioD_ProfilerIntegration();
   testScenarioE_CombinedExecution();
+  testScenarioF_ValidUncalibratedTelemetry();
+  testScenarioG_SensorFailureAndRecovery();
 
   std::cout << "\n=================================================================" << std::endl;
-  std::cout << "  ALL 5 INTEGRATION SCENARIOS PASSED WITH ZERO DEFECTS (0 ERRORS)." << std::endl;
+  std::cout << "  ALL 7 INTEGRATION SCENARIOS PASSED WITH ZERO DEFECTS (0 ERRORS)." << std::endl;
   std::cout << "=================================================================" << std::endl;
   return 0;
 }
